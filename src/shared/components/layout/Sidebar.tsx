@@ -62,7 +62,7 @@ export function Sidebar() {
                   : 'text-blue-100 hover:bg-white/10'
               }`}
             >
-              <span>📊</span> Dashboards y Asignaciones
+              <span>📊</span> Gestion de Periodos
             </Link>
             <Link
               href="/admin/usuarios"
