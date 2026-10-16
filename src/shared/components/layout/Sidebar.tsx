@@ -54,7 +54,10 @@ export function Sidebar() {
             >
               <span>🏢</span> Gestión de Empresas
             </Link>
-            <Link
+
+            {
+            /*se oculpra para fiuturo desarrollo de gestion de periodos
+             <Link
               href="/admin/dashboards"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${
                 pathname.startsWith('/admin/dashboards')
@@ -63,7 +66,7 @@ export function Sidebar() {
               }`}
             >
               <span>📊</span> Gestion de Periodos
-            </Link>
+            </Link> */}
             <Link
               href="/admin/usuarios"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${
