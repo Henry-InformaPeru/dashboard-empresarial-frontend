@@ -4,6 +4,13 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { httpClient } from '@/shared/lib/httpClient';
 
+interface EmpresaDto {
+  id: number;
+  nombre: string;
+  ruc: string | null;
+  estado: string;
+}
+
 interface DashboardAsignadoDto {
   id: number;
   nombre: string;
@@ -23,11 +30,11 @@ export default function AdminEmpresaPeriodosPage() {
   const params = useParams();
   const empresaId = params.id;
 
-  const [dashboards, setDashboards] = useState<DashboardAsignadoDto[]>([]);
+  const [empresa, setEmpresa] = useState<EmpresaDto | null>(null);
   const [selectedDashboardId, setSelectedDashboardId] = useState<number | null>(null);
   const [periodos, setPeriodos] = useState<PeriodoAdminDto[]>([]);
   
-  const [loadingDashboards, setLoadingDashboards] = useState(true);
+  const [loadingEmpresa, setLoadingEmpresa] = useState(true);
   const [loadingPeriodos, setLoadingPeriodos] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -38,27 +45,33 @@ export default function AdminEmpresaPeriodosPage() {
   const [urlPowerbi, setUrlPowerbi] = useState('');
   const [urlMega, setUrlMega] = useState('');
 
-  // 1. Cargar Dashboards asignados a esta empresa
+  // 1. Cargar la información de la Empresa y su Dashboard asociado automáticamente
   useEffect(() => {
-    const fetchDashboardsEmpresa = async () => {
+    const fetchEmpresaYDashboards = async () => {
       try {
-        const { data } = await httpClient.get<DashboardAsignadoDto[]>(`/empresas/${empresaId}/dashboards`);
-        setDashboards(data);
-        if (data.length > 0) {
-          setSelectedDashboardId(data[0].id);
+        // Obtenemos los datos de la empresa para mostrar su nombre
+        const resEmpresa = await httpClient.get<EmpresaDto>(`/empresas/${empresaId}`);
+        setEmpresa(resEmpresa.data);
+
+        // Obtenemos los dashboards de la empresa para capturar el ID de forma interna
+        const resDashboards = await httpClient.get<DashboardAsignadoDto[]>(`/empresas/${empresaId}/dashboards`);
+        if (resDashboards.data.length > 0) {
+          setSelectedDashboardId(resDashboards.data[0].id); // Asignación automática del ID oculto
+        } else {
+          setError('Esta empresa no tiene un dashboard vinculado para registrar periodos.');
         }
       } catch (err: any) {
-        console.error('Error al cargar dashboards de la empresa:', err);
-        setError('No se pudieron obtener los dashboards asignados a esta empresa.');
+        console.error('Error al cargar la información:', err);
+        setError('No se pudo obtener la configuración para esta empresa.');
       } finally {
-        setLoadingDashboards(false);
+        setLoadingEmpresa(false);
       }
     };
 
-    if (empresaId) fetchDashboardsEmpresa();
+    if (empresaId) fetchEmpresaYDashboards();
   }, [empresaId]);
 
-  // 2. Cargar Periodos del Dashboard seleccionado
+  // 2. Cargar Periodos del Dashboard obtenido automáticamente
   useEffect(() => {
     if (!selectedDashboardId) return;
 
@@ -70,7 +83,7 @@ export default function AdminEmpresaPeriodosPage() {
         setPeriodos(data);
       } catch (err: any) {
         console.error('Error al cargar periodos:', err);
-        setError('No se pudieron obtener los periodos para este dashboard.');
+        setError('No se pudieron obtener los periodos.');
       } finally {
         setLoadingPeriodos(false);
       }
@@ -79,11 +92,11 @@ export default function AdminEmpresaPeriodosPage() {
     fetchPeriodos();
   }, [selectedDashboardId]);
 
-  // 3. Registrar un nuevo Periodo
+  // 3. Registrar un nuevo Periodo usando el ID obtenido automáticamente
   const handleCrearPeriodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDashboardId) {
-      setError('Debes seleccionar un dashboard válido.');
+      setError('No hay un dashboard válido vinculado a esta empresa.');
       return;
     }
 
@@ -95,7 +108,7 @@ export default function AdminEmpresaPeriodosPage() {
       await httpClient.post(`/dashboards/${selectedDashboardId}/periodos`, {
         periodo: nuevoPeriodo,
         urlPowerbi,
-        urlMega,
+        urlMega: urlMega || null,
       });
 
       setSuccessMsg('¡Periodo y enlaces asignados exitosamente!');
@@ -146,23 +159,13 @@ export default function AdminEmpresaPeriodosPage() {
         </div>
       )}
 
-      {/* Selector de Dashboard Asignado */}
-      {!loadingDashboards && dashboards.length > 0 && (
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <span className="text-xs font-bold text-[#1B4589] uppercase tracking-wider">Dashboard:</span>
-          <select
-            value={selectedDashboardId || ''}
-            onChange={(e) => setSelectedDashboardId(Number(e.target.value))}
-            className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
-          >
-            {dashboards.map((dash) => (
-              <option key={dash.id} value={dash.id}>
-                {dash.nombre} ({dash.codigo})
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {/* Identificador de Empresa (Reemplazo visual del desplegable, manteniendo la lógica del ID) */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
+        <span className="text-xs font-bold text-[#1B4589] uppercase tracking-wider">EMPRESA:</span>
+        <span className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-[#231F20]">
+          {loadingEmpresa ? 'Cargando...' : empresa?.nombre || 'Empresa No Encontrada'} {empresa?.ruc ? `(RUC: ${empresa.ruc})` : ''}
+        </span>
+      </div>
 
       {/* Formulario de Nuevo Periodo */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -209,7 +212,6 @@ export default function AdminEmpresaPeriodosPage() {
               placeholder="https://mega.nz/..."
               value={urlMega}
               onChange={(e) => setUrlMega(e.target.value)}
-              required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
             />
           </div>
@@ -261,12 +263,7 @@ export default function AdminEmpresaPeriodosPage() {
                     </td>
                     <td className="py-4 px-6 text-gray-600 truncate max-w-xs">
                       {p.urlMega ? (
-                        <a
-                          href={p.urlMega}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#ED1C24] hover:underline"
-                        >
+                        <a href={p.urlMega} target="_blank" rel="noopener noreferrer" className="text-[#ED1C24] hover:underline">
                           {p.urlMega}
                         </a>
                       ) : (
@@ -280,7 +277,7 @@ export default function AdminEmpresaPeriodosPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-xs font-semibold text-gray-500">No hay periodos registrados para este dashboard.</p>
+            <p className="text-xs font-semibold text-gray-500">No hay periodos registrados para esta empresa.</p>
           </div>
         )}
       </div>

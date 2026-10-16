@@ -2,30 +2,77 @@
 
 import { useEffect, useState } from 'react';
 import { empresaService, EmpresaDto } from '@/modules/empresas/services/empresaService';
+import { httpClient } from '@/shared/lib/httpClient';
 
 export default function EmpresasAdminPage() {
   const [empresas, setEmpresas] = useState<EmpresaDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  useEffect(() => {
-    const fetchEmpresas = async () => {
-      try {
-        const data = await empresaService.listarEmpresas();
-        setEmpresas(data);
-      } catch (err: any) {
-        console.error('Error al cargar empresas:', err);
-        setError('No se pudo cargar la lista de empresas desde el servidor.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Estados para el Modal de Nueva Empresa
+  const [showModal, setShowModal] = useState(false);
+  const [nombre, setNombre] = useState('');
+  const [ruc, setRuc] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
+  // Limpiar formulario y cerrar modal
+  const limpiarFormulario = () => {
+    setNombre('');
+    setRuc('');
+    setError('');
+  };
+
+  const handleCerrarModal = () => {
+    setShowModal(false);
+    limpiarFormulario();
+  };
+
+  const fetchEmpresas = async () => {
+    try {
+      setLoading(true);
+      const data = await empresaService.listarEmpresas();
+      // Ordenar de más reciente a más antiguo (DESC según ID)
+      const empresasOrdenadas = (data || []).sort((a, b) => b.id - a.id);
+      setEmpresas(empresasOrdenadas);
+    } catch (err: any) {
+      console.error('Error al cargar empresas:', err);
+      setError('No se pudo cargar la lista de empresas desde el servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchEmpresas();
   }, []);
+
+  // Crear Empresa
+  const handleCrearEmpresa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    setSuccessMsg('');
+
+    try {
+      await httpClient.post('/empresas', {
+        nombre: nombre.trim(),
+        ruc: ruc.trim() || null,
+      });
+
+      setSuccessMsg('¡Empresa creada correctamente!');
+      handleCerrarModal();
+      fetchEmpresas();
+    } catch (err: any) {
+      console.error('Error al crear empresa:', err);
+      setError(err.response?.data?.message || 'Error al registrar la empresa.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Filtrar por nombre o RUC
   const empresasFiltradas = empresas.filter(
@@ -57,21 +104,98 @@ export default function EmpresasAdminPage() {
           </p>
         </div>
 
-        {/* Buscador rápido */}
-        <div className="w-full md:w-72">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {/* Buscador rápido */}
           <input
             type="text"
             placeholder="Buscar por nombre o RUC..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+            className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
           />
+
+          <button
+            onClick={() => {
+              limpiarFormulario();
+              setShowModal(true);
+            }}
+            className="px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm whitespace-nowrap"
+          >
+            + Nueva Empresa
+          </button>
         </div>
       </div>
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-[#ED1C24] text-xs font-medium">
           ⚠️ {error}
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-xs font-medium">
+          ✅ {successMsg}
+        </div>
+      )}
+
+      {/* Modal para Crear Empresa */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-gray-100">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-bold text-sm text-[#1B4589]">Registrar Nueva Empresa</h3>
+              <button
+                onClick={handleCerrarModal}
+                className="text-gray-400 hover:text-gray-600 font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCrearEmpresa} className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-[#231F20] mb-1">Nombre de la Empresa</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Empresa S.A.C."
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  required
+                  maxLength={200}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#231F20] mb-1">RUC (Opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Ej: 20123456789"
+                  value={ruc}
+                  onChange={(e) => setRuc(e.target.value)}
+                  maxLength={11}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={handleCerrarModal}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-lg transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm disabled:opacity-50"
+                >
+                  {submitting ? 'Guardando...' : 'Crear Empresa'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -127,10 +251,10 @@ export default function EmpresasAdminPage() {
                         </td>
                         <td className="py-4 px-6 text-right">
                           <a
-                            href={`/admin/empresas/${empresa.id}/dashboards`}
-                            className="px-3 py-1.5 bg-[#1B4589] hover:bg-[#143468] text-white font-semibold rounded-lg shadow-sm transition-all text-[11px]"
+                            href={`/admin/empresas/${empresa.id}/periodos`}
+                            className="px-3 py-1.5 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-[11px] rounded-lg transition-all"
                           >
-                            Ver Dashboards
+                            Ver Periodos
                           </a>
                         </td>
                       </tr>
