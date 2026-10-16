@@ -1,26 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colores Principales de la Marca */
+  --informa-blue: #1B4589;
+  --informa-red: #ED1C24;
+  --informa-black: #231F20;
+  
+  /* Tonos de Apoyo Azul */
+  --informa-blue-75: #5474A7;
+  --informa-blue-50: #8DA2C4;
+  --informa-blue-25: #C6D0E2;
+  --informa-blue-10: #E8ECF3;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  /* Aliases de colores para usar con utilidades Tailwind (ej. bg-informa-blue, text-informa-red) */
+  --color-informa-blue: var(--informa-blue);
+  --color-informa-red: var(--informa-red);
+  --color-informa-black: var(--informa-black);
+  
+  --color-informa-blue-75: var(--informa-blue-75);
+  --color-informa-blue-50: var(--informa-blue-50);
+  --color-informa-blue-25: var(--informa-blue-25);
+  --color-informa-blue-10: var(--informa-blue-10);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Tipografía oficial Leelawadee UI / Arial */
+  --font-sans: 'Leelawadee UI', 'Segoe UI', Arial, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--informa-blue-10);
+  color: var(--informa-black);
+  margin: 0;
+  padding: 0;
 }
