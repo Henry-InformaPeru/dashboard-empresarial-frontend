@@ -28,7 +28,7 @@ export default function ClienteLayout({
         const user = JSON.parse(userStr);
         // Si fuera admin intentando entrar a /cliente, lo redirigimos a su sección
         if (user.rolId === 1) {
-          router.push('/admin/dashboards');
+          router.push('/admin/empresas');
           return;
         }
       } catch (e) {
