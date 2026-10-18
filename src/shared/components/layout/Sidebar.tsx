@@ -54,7 +54,17 @@ export function Sidebar() {
             >
               <span>🏢</span> Gestión de Empresas
             </Link>
-            
+            <Link
+              href="/admin/reportes"
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${
+                pathname.startsWith('/admin/reportes')
+                  ? 'bg-[#ED1C24] text-white shadow-md'
+                  : 'text-blue-100 hover:bg-white/10'
+              }`}
+            >
+              <span>📊</span> Reportes y Periodos
+            </Link>
+
             {/* <Link
               href="/admin/dashboards"
               className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${
