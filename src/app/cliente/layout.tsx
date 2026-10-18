@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sidebar } from '@/shared/components/layout/Sidebar';
-import { Header } from '@/shared/components/layout/Header';
-import { Footer } from '@/shared/components/layout/Footer';
+import { AppShell } from '@/shared/components/layout/AppShell';
 
 export default function ClienteLayout({
   children,
@@ -41,20 +39,11 @@ export default function ClienteLayout({
 
   if (!authorized) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#E8ECF3]">
+      <div className="flex min-h-dvh items-center justify-center bg-[#E8ECF3]">
         <p className="text-[#1B4589] font-bold">Cargando panel de cliente...</p>
       </div>
     );
   }
 
-  return (
-    <div className="flex min-h-screen bg-[#E8ECF3]">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
-        <Footer />
-      </div>
-    </div>
-  );
+  return <AppShell>{children}</AppShell>;
 }

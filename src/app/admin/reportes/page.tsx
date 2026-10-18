@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/shared/lib/httpClient';
 import { empresaService, EmpresaDto } from '@/modules/empresas/services/empresaService';
+import { VisorReporte } from '@/modules/dashboards/components/VisorReporte';
 
 interface DashboardEmpresaDto {
   id: number;
@@ -160,7 +161,7 @@ export default function AdminReportesPage() {
   return (
     <div className="space-y-4">
       {/* Encabezado y selectores */}
-      <div className="bg-white px-5 py-4 rounded-xl shadow-sm border border-gray-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+      <div className="bg-white px-4 sm:px-5 py-4 rounded-xl shadow-sm border border-gray-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-[#1B4589]">Reportes y Periodos</h2>
           <p className="text-[#231F20] text-xs mt-0.5">
@@ -168,14 +169,14 @@ export default function AdminReportesPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 w-full lg:w-auto">
+          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 w-full sm:w-auto">
             <span className="text-[11px] font-bold text-[#1B4589] uppercase tracking-wider">EMPRESA:</span>
             <select
               value={empresaId ?? ''}
               onChange={(e) => elegirEmpresa(e.target.value ? Number(e.target.value) : null)}
               disabled={loadingEmpresas}
-              className="px-2 py-1 border border-gray-300 rounded text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold max-w-[220px]"
+              className="flex-1 min-w-0 px-2 py-2 sm:py-1 border border-gray-300 rounded text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold sm:max-w-[220px]"
             >
               <option value="">{loadingEmpresas ? 'Cargando...' : 'Selecciona una empresa'}</option>
               {empresas.map((e) => (
@@ -188,12 +189,12 @@ export default function AdminReportesPage() {
           </div>
 
           {dashboards.length > 1 && (
-            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 w-full sm:w-auto">
               <span className="text-[11px] font-bold text-[#1B4589] uppercase tracking-wider">DASHBOARD:</span>
               <select
                 value={dashboardId ?? ''}
                 onChange={(e) => elegirDashboard(Number(e.target.value))}
-                className="px-2 py-1 border border-gray-300 rounded text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold max-w-[220px]"
+                className="flex-1 min-w-0 px-2 py-2 sm:py-1 border border-gray-300 rounded text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold sm:max-w-[220px]"
               >
                 {dashboards.map((d) => (
                   <option key={d.id} value={d.id}>
@@ -229,7 +230,7 @@ export default function AdminReportesPage() {
                   <button
                     key={a}
                     onClick={() => elegirAnio(a)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                    className={`px-4 py-2.5 sm:px-3 sm:py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
                       anio === a ? 'bg-[#1B4589] text-white shadow-sm' : 'bg-gray-100 text-[#231F20] hover:bg-gray-200'
                     }`}
                   >
@@ -249,7 +250,7 @@ export default function AdminReportesPage() {
                   <button
                     key={p.id}
                     onClick={() => setPeriodo(p.periodo)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                    className={`px-4 py-2.5 sm:px-3.5 sm:py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                       seleccionado ? 'bg-[#1B4589] text-white shadow-sm' : 'bg-gray-100 text-[#231F20] hover:bg-gray-200'
                     }`}
                   >
@@ -270,7 +271,7 @@ export default function AdminReportesPage() {
       )}
 
       {/* Visor */}
-      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
+      <div className="bg-white p-3 sm:p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <div>
             <h3 className="font-bold text-base text-[#1B4589]">
@@ -286,7 +287,7 @@ export default function AdminReportesPage() {
               href={periodoActual.urlMega}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3.5 py-1.5 bg-[#1B4589] hover:bg-[#143468] text-white text-xs font-bold rounded-lg transition-all shadow flex items-center gap-1.5 shrink-0"
+              className="w-full md:w-auto min-h-[44px] md:min-h-0 justify-center px-4 py-2.5 md:px-3.5 md:py-1.5 bg-[#1B4589] hover:bg-[#143468] text-white text-xs font-bold rounded-lg transition-all shadow flex items-center gap-1.5 shrink-0"
             >
               <span>📥</span> Descargar
             </a>
@@ -298,15 +299,11 @@ export default function AdminReportesPage() {
             <p className="text-[#1B4589] text-xs font-bold animate-pulse">Cargando...</p>
           </div>
         ) : periodoActual?.urlPowerbi ? (
-          <div className="w-full h-[550px] bg-gray-50 rounded-xl overflow-hidden border border-gray-200 shadow-inner">
-            <iframe
-              key={periodoActual.id}
-              title={`Reporte ${periodoActual.periodo}`}
-              src={periodoActual.urlPowerbi}
-              className="w-full h-full border-0"
-              allowFullScreen
-            />
-          </div>
+          <VisorReporte
+            key={periodoActual.id}
+            src={periodoActual.urlPowerbi}
+            titulo={`Reporte ${periodoActual.periodo}`}
+          />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 bg-[#E8ECF3] rounded-full flex items-center justify-center text-2xl mb-2 text-[#1B4589]">
