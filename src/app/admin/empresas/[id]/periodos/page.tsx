@@ -130,7 +130,7 @@ export default function AdminEmpresaPeriodosPage() {
   return (
     <div className="space-y-6">
       {/* Cabecera */}
-      <div className="bg-white px-6 py-5 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white px-4 sm:px-6 py-4 sm:py-5 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-[#1B4589]">
             Gestión de Periodos y Enlaces
@@ -141,7 +141,7 @@ export default function AdminEmpresaPeriodosPage() {
         </div>
         <a
           href="/admin/empresas"
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-[#1B4589] font-bold text-xs rounded-lg transition-all"
+          className="inline-flex items-center justify-center w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-[#1B4589] font-bold text-xs rounded-lg transition-all"
         >
           ← Volver a Empresas
         </a>
@@ -160,7 +160,7 @@ export default function AdminEmpresaPeriodosPage() {
       )}
 
       {/* Identificador de Empresa (Reemplazo visual del desplegable, manteniendo la lógica del ID) */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap items-center gap-2 sm:gap-3">
         <span className="text-xs font-bold text-[#1B4589] uppercase tracking-wider">EMPRESA:</span>
         <span className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-[#231F20]">
           {loadingEmpresa ? 'Cargando...' : empresa?.nombre || 'Empresa No Encontrada'} {empresa?.ruc ? `(RUC: ${empresa.ruc})` : ''}
@@ -168,7 +168,7 @@ export default function AdminEmpresaPeriodosPage() {
       </div>
 
       {/* Formulario de Nuevo Periodo */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
         <h3 className="font-bold text-sm text-[#1B4589] mb-4">
           Asignar Nuevo Periodo y Enlaces
         </h3>
@@ -185,7 +185,7 @@ export default function AdminEmpresaPeriodosPage() {
               onChange={(e) => setNuevoPeriodo(e.target.value)}
               required
               maxLength={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-mono"
+              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-mono"
             />
           </div>
 
@@ -199,7 +199,7 @@ export default function AdminEmpresaPeriodosPage() {
               value={urlPowerbi}
               onChange={(e) => setUrlPowerbi(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
             />
           </div>
 
@@ -212,7 +212,7 @@ export default function AdminEmpresaPeriodosPage() {
               placeholder="https://mega.nz/..."
               value={urlMega}
               onChange={(e) => setUrlMega(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
             />
           </div>
 
@@ -220,7 +220,7 @@ export default function AdminEmpresaPeriodosPage() {
             <button
               type="submit"
               disabled={submitting || !selectedDashboardId}
-              className="w-full py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm disabled:opacity-50"
+              className="w-full min-h-[44px] sm:min-h-0 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm disabled:opacity-50"
             >
               {submitting ? 'Guardando...' : '+ Registrar Periodo'}
             </button>
@@ -230,7 +230,7 @@ export default function AdminEmpresaPeriodosPage() {
 
       {/* Tabla de Periodos */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <h3 className="font-bold text-sm text-[#1B4589]">
             Periodos Registrados ({periodos.length})
           </h3>
@@ -241,7 +241,8 @@ export default function AdminEmpresaPeriodosPage() {
             <p className="text-[#1B4589] text-xs font-bold animate-pulse">Cargando periodos...</p>
           </div>
         ) : periodos.length > 0 ? (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
@@ -275,6 +276,35 @@ export default function AdminEmpresaPeriodosPage() {
               </tbody>
             </table>
           </div>
+          {/* Celular: una tarjeta por periodo */}
+          <div className="md:hidden divide-y divide-gray-100">
+            {periodos.map((p) => (
+              <div key={p.id} className="p-4 flex items-center justify-between gap-3">
+                <p className="font-mono font-bold text-[#1B4589] text-base">{p.periodo}</p>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={p.urlPowerbi}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center min-h-[44px] px-3 text-xs font-bold text-[#1B4589] border border-[#1B4589]/30 rounded-lg active:bg-blue-50"
+                  >
+                    Power BI
+                  </a>
+                  {p.urlMega && (
+                    <a
+                      href={p.urlMega}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center min-h-[44px] px-3 text-xs font-bold text-[#ED1C24] border border-[#ED1C24]/30 rounded-lg active:bg-red-50"
+                    >
+                      Descarga
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-xs font-semibold text-gray-500">No hay periodos registrados para esta empresa.</p>

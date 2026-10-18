@@ -94,7 +94,7 @@ export default function EmpresasAdminPage() {
   return (
     <div className="space-y-6">
       {/* Encabezado */}
-      <div className="bg-white px-6 py-5 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white px-4 sm:px-6 py-4 sm:py-5 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-[#1B4589]">
             Gestión de Empresas
@@ -104,14 +104,14 @@ export default function EmpresasAdminPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
           {/* Buscador rápido */}
           <input
             type="text"
             placeholder="Buscar por nombre o RUC..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+            className="w-full md:w-64 px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
           />
 
           <button
@@ -119,7 +119,7 @@ export default function EmpresasAdminPage() {
               limpiarFormulario();
               setShowModal(true);
             }}
-            className="px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm whitespace-nowrap"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm whitespace-nowrap"
           >
             + Nueva Empresa
           </button>
@@ -141,7 +141,7 @@ export default function EmpresasAdminPage() {
       {/* Modal para Crear Empresa */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-gray-100">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-4 sm:p-6 space-y-4 border border-gray-100">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="font-bold text-sm text-[#1B4589]">Registrar Nueva Empresa</h3>
               <button
@@ -162,7 +162,7 @@ export default function EmpresasAdminPage() {
                   onChange={(e) => setNombre(e.target.value)}
                   required
                   maxLength={200}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-medium"
+                  className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-medium"
                 />
               </div>
 
@@ -174,7 +174,7 @@ export default function EmpresasAdminPage() {
                   value={ruc}
                   onChange={(e) => setRuc(e.target.value)}
                   maxLength={11}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-mono"
+                  className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-mono"
                 />
               </div>
 
@@ -182,14 +182,14 @@ export default function EmpresasAdminPage() {
                 <button
                   type="button"
                   onClick={handleCerrarModal}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-lg transition-all"
+                  className="min-h-[44px] sm:min-h-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-lg transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm disabled:opacity-50"
+                  className="min-h-[44px] sm:min-h-0 px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm disabled:opacity-50"
                 >
                   {submitting ? 'Guardando...' : 'Crear Empresa'}
                 </button>
@@ -201,7 +201,7 @@ export default function EmpresasAdminPage() {
 
       {/* Tabla de Empresas */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between">
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
           <h3 className="font-bold text-sm text-[#1B4589]">
             Empresas Registradas ({empresasFiltradas.length})
           </h3>
@@ -213,7 +213,7 @@ export default function EmpresasAdminPage() {
           </div>
         ) : empresasPaginadas.length > 0 ? (
           <>
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
@@ -264,8 +264,40 @@ export default function EmpresasAdminPage() {
               </table>
             </div>
 
+            {/* Celular: una tarjeta por empresa */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {empresasPaginadas.map((empresa) => {
+                const isActive = empresa.estado?.toUpperCase() === 'ACTIVO';
+                return (
+                  <div key={empresa.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-bold text-[#1B4589] text-sm break-words">{empresa.nombre}</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">
+                          RUC: <span className="font-mono">{empresa.ruc || 'S/N'}</span> · {new Date(empresa.fechaCreacion).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 ${
+                          isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {empresa.estado}
+                      </span>
+                    </div>
+                    <a
+                      href={`/admin/empresas/${empresa.id}/periodos`}
+                      className="flex items-center justify-center min-h-[44px] w-full bg-[#1B4589] hover:bg-[#143468] active:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all"
+                    >
+                      Ver Periodos
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+
             {/* Paginador Inferior */}
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between gap-2">
               <span className="text-xs text-gray-500">
                 Página <strong className="text-[#1B4589]">{currentPage}</strong> de <strong className="text-[#1B4589]">{totalPages}</strong>
               </span>
@@ -274,14 +306,14 @@ export default function EmpresasAdminPage() {
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-[#1B4589] disabled:opacity-40 hover:bg-gray-100 transition-all shadow-sm"
+                  className="min-h-[44px] sm:min-h-0 px-4 sm:px-3 py-2 sm:py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-[#1B4589] disabled:opacity-40 hover:bg-gray-100 transition-all shadow-sm"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-[#1B4589] disabled:opacity-40 hover:bg-gray-100 transition-all shadow-sm"
+                  className="min-h-[44px] sm:min-h-0 px-4 sm:px-3 py-2 sm:py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-[#1B4589] disabled:opacity-40 hover:bg-gray-100 transition-all shadow-sm"
                 >
                   Siguiente
                 </button>

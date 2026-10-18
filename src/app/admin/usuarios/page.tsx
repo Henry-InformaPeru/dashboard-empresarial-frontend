@@ -159,7 +159,7 @@ export default function AdminUsuariosPage() {
   return (
     <div className="space-y-6">
       {/* Cabecera */}
-      <div className="bg-white px-6 py-5 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white px-4 sm:px-6 py-4 sm:py-5 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-[#1B4589]">Gestión de Usuarios</h2>
           <p className="text-gray-500 text-xs mt-0.5">
@@ -167,14 +167,14 @@ export default function AdminUsuariosPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
           {/* Buscador */}
           <input
             type="text"
             placeholder="Buscar por usuario, nombre o email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+            className="w-full md:w-64 px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
           />
 
           <button
@@ -182,7 +182,7 @@ export default function AdminUsuariosPage() {
               limpiarFormulario();
               setShowModal(true);
             }}
-            className="px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm whitespace-nowrap"
+            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm whitespace-nowrap"
           >
             + Nuevo Usuario
           </button>
@@ -204,7 +204,7 @@ export default function AdminUsuariosPage() {
       {/* Modal para Crear Usuario */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-gray-100">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90dvh] overflow-y-auto p-4 sm:p-6 space-y-4 border border-gray-100">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="font-bold text-sm text-[#1B4589]">Registrar Nuevo Usuario</h3>
               <button
@@ -221,7 +221,7 @@ export default function AdminUsuariosPage() {
                 <select
                   value={rolId}
                   onChange={(e) => setRolId(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-bold text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+                  className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs font-bold text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
                 >
                   <option value={2}>Cliente (Empresa)</option>
                   <option value={1}>Administrador Global</option>
@@ -235,7 +235,7 @@ export default function AdminUsuariosPage() {
                     value={empresaId || ''}
                     onChange={(e) => setEmpresaId(Number(e.target.value))}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-bold text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+                    className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs font-bold text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
                   >
                     <option value="">Seleccione una empresa...</option>
                     {empresas.map((emp) => (
@@ -255,7 +255,7 @@ export default function AdminUsuariosPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-mono"
+                  className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-mono"
                 />
               </div>
 
@@ -267,7 +267,7 @@ export default function AdminUsuariosPage() {
                     placeholder="Ej: Juan Pérez"
                     value={nombreCompleto}
                     onChange={(e) => setNombreCompleto(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+                    className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
                   />
                 </div>
                 <div>
@@ -277,7 +277,7 @@ export default function AdminUsuariosPage() {
                     placeholder="correo@empresa.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+                    className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
                   />
                 </div>
               </div>
@@ -292,7 +292,7 @@ export default function AdminUsuariosPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+                    className="w-full px-3 py-2.5 sm:py-2 pr-10 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
                   />
                   <button
                     type="button"
@@ -321,14 +321,14 @@ export default function AdminUsuariosPage() {
                 <button
                   type="button"
                   onClick={handleCerrarModal}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-lg transition-all"
+                  className="min-h-[44px] sm:min-h-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-lg transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm disabled:opacity-50"
+                  className="min-h-[44px] sm:min-h-0 px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm disabled:opacity-50"
                 >
                   {submitting ? 'Guardando...' : 'Crear Usuario'}
                 </button>
@@ -340,7 +340,7 @@ export default function AdminUsuariosPage() {
 
       {/* Tabla de Usuarios */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between">
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <h3 className="font-bold text-sm text-[#1B4589]">
             Usuarios Registrados ({usuariosFiltrados.length})
           </h3>
@@ -352,7 +352,7 @@ export default function AdminUsuariosPage() {
           </div>
         ) : usuariosPaginados.length > 0 ? (
           <>
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
@@ -405,8 +405,53 @@ export default function AdminUsuariosPage() {
               </table>
             </div>
 
+            {/* Celular: una tarjeta por usuario */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {usuariosPaginados.map((u) => {
+                const isActive = u.estado?.toUpperCase() === 'ACTIVO';
+                const isCliente = u.rolId === 2;
+                return (
+                  <div key={u.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-bold font-mono text-[#1B4589] text-sm break-all">{u.username}</p>
+                        <p className="text-[11px] text-gray-400 break-words">{u.nombreCompleto || u.email || 'Sin datos adicionales'}</p>
+                      </div>
+                      <span
+                        className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 ${
+                          isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {u.estado}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                      <span
+                        className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${
+                          isCliente ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                        }`}
+                      >
+                        {isCliente ? 'CLIENTE' : 'ADMINISTRADOR'}
+                      </span>
+                      <span className="font-semibold text-gray-700 break-words">{obtenerNombreEmpresa(u.empresaId)}</span>
+                    </div>
+                    <button
+                      onClick={() => handleCambiarEstado(u.id, u.estado)}
+                      className={`w-full min-h-[44px] rounded-lg font-bold text-xs transition-all ${
+                        isActive
+                          ? 'bg-red-50 text-[#ED1C24] hover:bg-red-100 border border-red-200'
+                          : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                      }`}
+                    >
+                      {isActive ? 'Desactivar' : 'Activar'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
             {/* Paginador Inferior */}
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between gap-2">
               <span className="text-xs text-gray-500">
                 Página <strong className="text-[#1B4589]">{currentPage}</strong> de <strong className="text-[#1B4589]">{totalPages}</strong>
               </span>
@@ -415,14 +460,14 @@ export default function AdminUsuariosPage() {
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-[#1B4589] disabled:opacity-40 hover:bg-gray-100 transition-all shadow-sm"
+                  className="min-h-[44px] sm:min-h-0 px-4 sm:px-3 py-2 sm:py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-[#1B4589] disabled:opacity-40 hover:bg-gray-100 transition-all shadow-sm"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-[#1B4589] disabled:opacity-40 hover:bg-gray-100 transition-all shadow-sm"
+                  className="min-h-[44px] sm:min-h-0 px-4 sm:px-3 py-2 sm:py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-bold text-[#1B4589] disabled:opacity-40 hover:bg-gray-100 transition-all shadow-sm"
                 >
                   Siguiente
                 </button>

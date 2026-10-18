@@ -45,7 +45,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-[#E8ECF3] p-4">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-[#E8ECF3] p-4">
       {/* Tarjeta de Login */}
       <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-100">
         
@@ -60,7 +60,7 @@ export function LoginForm() {
         </div>
 
         {/* Cuerpo del Formulario */}
-        <div className="p-8">
+        <div className="p-6 sm:p-8">
           {/* Logo Oficial de Informa Perú */}
           <div className="flex justify-center mb-6">
             <Image
@@ -90,10 +90,15 @@ export function LoginForm() {
               </label>
               <input
                 type="text"
+                name="username"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B4589] focus:border-[#1B4589] focus:outline-none text-[#231F20] transition-colors"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B4589] focus:border-[#1B4589] focus:outline-none text-[#231F20] transition-colors"
                 placeholder="Ingresa tu usuario"
               />
             </div>
@@ -105,16 +110,18 @@ export function LoginForm() {
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pl-4 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B4589] focus:border-[#1B4589] focus:outline-none text-[#231F20] transition-colors"
+                  className="w-full pl-4 pr-12 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B4589] focus:border-[#1B4589] focus:outline-none text-[#231F20] transition-colors"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#1B4589] focus:outline-none transition-colors p-1"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-gray-500 hover:text-[#1B4589] focus:outline-none transition-colors"
                   aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
                 >
                   {showPassword ? (
@@ -134,7 +141,7 @@ export function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-[#1B4589] text-white font-bold rounded-lg hover:bg-[#143468] active:scale-[0.99] transition-all duration-200 disabled:opacity-50 shadow-md"
+              className="w-full min-h-[48px] py-3 text-base bg-[#1B4589] text-white font-bold rounded-lg hover:bg-[#143468] active:scale-[0.99] transition-all duration-200 disabled:opacity-50 shadow-md"
             >
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>

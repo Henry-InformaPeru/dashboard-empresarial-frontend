@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { dashboardService, DashboardResponseDto } from '@/modules/dashboards/services/dashboardService';
 import { periodoService, PeriodoResponseDto, EnlacesPeriodoResponseDto } from '@/modules/dashboards/services/periodoService';
+import { VisorReporte } from '@/modules/dashboards/components/VisorReporte';
 
 function PeriodosContent() {
   const searchParams = useSearchParams();
@@ -123,7 +124,7 @@ function PeriodosContent() {
   return (
     <div className="space-y-4">
       {/* Encabezado Superior Compacto */}
-      <div className="bg-white px-5 py-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+      <div className="bg-white px-4 sm:px-5 py-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-[#1B4589]">
             Reportes y Periodos
@@ -134,14 +135,14 @@ function PeriodosContent() {
         </div>
 
         {!loadingDashboards && dashboards.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             {dashboards.length > 1 ? (
-              <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 w-full md:w-auto">
                 <span className="text-[11px] font-bold text-[#1B4589] uppercase tracking-wider">DASHBOARD:</span>
                 <select
                   value={selectedDashboardId || ''}
                   onChange={(e) => setSelectedDashboardId(Number(e.target.value))}
-                  className="px-2 py-1 border border-gray-300 rounded text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold"
+                  className="flex-1 min-w-0 px-2 py-2 sm:py-1 border border-gray-300 rounded text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold"
                 >
                   {dashboards.map((d) => (
                     <option key={d.id} value={d.id}>
@@ -187,7 +188,7 @@ function PeriodosContent() {
                           setSelectedPeriodoStr(primerMesDelAnio.periodo);
                         }
                       }}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                      className={`px-4 py-2.5 sm:px-3 sm:py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
                         isAnioSelected
                           ? 'bg-[#1B4589] text-white shadow-sm'
                           : 'bg-gray-100 text-[#231F20] hover:bg-gray-200'
@@ -213,7 +214,7 @@ function PeriodosContent() {
                   <button
                     key={p.id}
                     onClick={() => setSelectedPeriodoStr(p.periodo)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                    className={`px-4 py-2.5 sm:px-3.5 sm:py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
                       isSelected
                         ? 'bg-[#1B4589] text-white shadow-sm'
                         : 'bg-gray-100 text-[#231F20] hover:bg-gray-200'
@@ -232,7 +233,7 @@ function PeriodosContent() {
       )}
 
       {/* Visor Principal Optimizado */}
-      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4">
+      <div className="bg-white p-3 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <div>
             <h3 className="font-bold text-base text-[#1B4589]">
@@ -241,13 +242,13 @@ function PeriodosContent() {
             <p className="text-[11px] text-gray-400">Visualización interactiva y documentos adjuntos del periodo.</p>
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+          <div className="flex items-center gap-3 w-full md:w-auto md:justify-end">
             {enlaces?.urlMega && (
               <a
                 href={enlaces.urlMega}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3.5 py-1.5 bg-[#1B4589] hover:bg-[#143468] text-white text-xs font-bold rounded-lg transition-all shadow flex items-center gap-1.5 shrink-0"
+                className="w-full sm:w-auto min-h-[44px] sm:min-h-0 justify-center px-4 py-2.5 sm:px-3.5 sm:py-1.5 bg-[#1B4589] hover:bg-[#143468] text-white text-xs font-bold rounded-lg transition-all shadow flex items-center gap-1.5 shrink-0"
               >
                 <span>📥</span> Descargar
               </a>
@@ -260,14 +261,7 @@ function PeriodosContent() {
             <p className="text-[#1B4589] text-xs font-bold animate-pulse">Cargando reporte interactivo...</p>
           </div>
         ) : enlaces && enlaces.urlPowerbi ? (
-          <div className="w-full h-[550px] bg-gray-50 rounded-xl overflow-hidden border border-gray-200 shadow-inner">
-            <iframe
-              title={`Reporte ${enlaces.periodo}`}
-              src={enlaces.urlPowerbi}
-              className="w-full h-full border-0"
-              allowFullScreen
-            />
-          </div>
+          <VisorReporte src={enlaces.urlPowerbi} titulo={`Reporte ${enlaces.periodo}`} />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 bg-[#E8ECF3] rounded-full flex items-center justify-center text-2xl mb-2 text-[#1B4589]">

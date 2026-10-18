@@ -47,8 +47,8 @@ export default function MisDashboardsPage() {
   return (
     <div className="space-y-6">
       {/* Banner de Bienvenida sin Empresa ID */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-2xl font-bold text-[#1B4589]">
+      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#1B4589]">
           Bienvenido, {usuario?.nombreCompleto || 'Usuario'}
         </h2>
         <p className="text-[#231F20] text-sm mt-1">
@@ -72,13 +72,13 @@ export default function MisDashboardsPage() {
 
       {/* Listado de Dashboards */}
       {!loading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {dashboards.length > 0 ? (
             dashboards.map((dash) => (
               <div
                 key={dash.id}
                 onClick={() => handleSelectDashboard(dash.id)}
-                className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-[#1B4589] hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between w-full overflow-hidden"
+                className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 hover:border-[#1B4589] hover:shadow-md active:scale-[0.99] transition-all cursor-pointer group flex flex-col justify-between w-full overflow-hidden"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-4">
