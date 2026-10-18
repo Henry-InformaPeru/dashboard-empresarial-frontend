@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Servidor mínimo para el contenedor (ver Dockerfile)
+  output: "standalone",
   turbopack: {
     rules: {
       "*.css": {
