@@ -4,6 +4,8 @@ export interface PeriodoResponseDto {
   id: number;
   dashboardId: number;
   periodo: string; // Formato YYYYMM (ej. 202610)
+  urlPowerbi: string;
+  urlMega: string | null;
 }
 
 export interface EnlacesPeriodoResponseDto {

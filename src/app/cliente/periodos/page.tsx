@@ -3,9 +3,10 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { dashboardService, DashboardResponseDto } from '@/modules/dashboards/services/dashboardService';
-import { periodoService, PeriodoResponseDto, EnlacesPeriodoResponseDto } from '@/modules/dashboards/services/periodoService';
+import { periodoService, PeriodoResponseDto } from '@/modules/dashboards/services/periodoService';
 import { VisorReporte } from '@/modules/dashboards/components/VisorReporte';
 import { SelectorPeriodo, etiquetaPeriodo } from '@/modules/dashboards/components/SelectorPeriodo';
+import { BotonDescarga } from '@/modules/dashboards/components/BotonDescarga';
 
 function PeriodosContent() {
   const searchParams = useSearchParams();
@@ -19,11 +20,8 @@ function PeriodosContent() {
   const [periodos, setPeriodos] = useState<PeriodoResponseDto[]>([]);
   const [selectedPeriodoStr, setSelectedPeriodoStr] = useState<string | null>(null);
   
-  const [enlaces, setEnlaces] = useState<EnlacesPeriodoResponseDto | null>(null);
-  
   const [loadingDashboards, setLoadingDashboards] = useState(true);
   const [loadingPeriodos, setLoadingPeriodos] = useState(false);
-  const [loadingEnlaces, setLoadingEnlaces] = useState(false);
   const [error, setError] = useState('');
 
   // 1. Cargar dashboards
@@ -55,7 +53,6 @@ function PeriodosContent() {
       setError('');
       setPeriodos([]);
       setSelectedPeriodoStr(null);
-      setEnlaces(null);
 
       try {
         const data = await periodoService.getPeriodosPorDashboard(selectedDashboardId);
@@ -76,25 +73,10 @@ function PeriodosContent() {
     fetchPeriodos();
   }, [selectedDashboardId]);
 
-  // 3. Cargar enlaces
-  useEffect(() => {
-    if (!selectedDashboardId || !selectedPeriodoStr) return;
-
-    const fetchEnlaces = async () => {
-      setLoadingEnlaces(true);
-      try {
-        const data = await periodoService.getEnlacesPeriodo(selectedDashboardId, selectedPeriodoStr);
-        setEnlaces(data);
-      } catch (err: any) {
-        console.error('Error al cargar enlaces del periodo:', err);
-        setError('No se pudieron obtener los enlaces para este periodo.');
-      } finally {
-        setLoadingEnlaces(false);
-      }
-    };
-
-    fetchEnlaces();
-  }, [selectedDashboardId, selectedPeriodoStr]);
+  // El periodo elegido (la lista ya trae el enlace de Power BI y el de descarga de cada periodo).
+  // Cambiar de periodo NO recarga el reporte: el periodo se cambia dentro del propio Power BI y, si el enlace es el mismo,
+  // la página no lo vuelve a cargar; solo cambian el título y el botón de descarga.
+  const periodoActual = periodos.find((p) => p.periodo === selectedPeriodoStr) || null;
 
   const currentDashboardNombre = dashboards
     .find(d => d.id === selectedDashboardId)
@@ -143,6 +125,8 @@ function PeriodosContent() {
               onCambiar={setSelectedPeriodoStr}
               cargando={loadingPeriodos}
             />
+
+            <BotonDescarga url={periodoActual?.urlMega} />
           </div>
         )}
       </div>
@@ -162,27 +146,14 @@ function PeriodosContent() {
             </h3>
             <p className="text-[11px] text-gray-400">Visualización interactiva y documentos adjuntos del periodo.</p>
           </div>
-
-          <div className="flex items-center gap-3 w-full md:w-auto md:justify-end">
-            {enlaces?.urlMega && (
-              <a
-                href={enlaces.urlMega}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto min-h-[44px] sm:min-h-0 justify-center px-4 py-2.5 sm:px-3.5 sm:py-1.5 bg-[#1B4589] hover:bg-[#143468] text-white text-xs font-bold rounded-lg transition-all shadow flex items-center gap-1.5 shrink-0"
-              >
-                <span>📥</span> Descargar
-              </a>
-            )}
-          </div>
         </div>
 
-        {loadingEnlaces ? (
+        {loadingPeriodos ? (
           <div className="flex flex-col items-center justify-center py-24">
             <p className="text-[#1B4589] text-xs font-bold animate-pulse">Cargando reporte interactivo...</p>
           </div>
-        ) : enlaces && enlaces.urlPowerbi ? (
-          <VisorReporte src={enlaces.urlPowerbi} titulo={`Reporte ${enlaces.periodo}`} />
+        ) : periodoActual?.urlPowerbi ? (
+          <VisorReporte src={periodoActual.urlPowerbi} titulo={`Reporte ${currentDashboardNombre ?? ''}`} />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 bg-[#E8ECF3] rounded-full flex items-center justify-center text-2xl mb-2 text-[#1B4589]">
