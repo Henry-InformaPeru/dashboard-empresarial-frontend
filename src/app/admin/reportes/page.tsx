@@ -5,6 +5,7 @@ import { httpClient } from '@/shared/lib/httpClient';
 import { empresaService, EmpresaDto } from '@/modules/empresas/services/empresaService';
 import { VisorReporte } from '@/modules/dashboards/components/VisorReporte';
 import { SelectorPeriodo } from '@/modules/dashboards/components/SelectorPeriodo';
+import { BotonDescarga } from '@/modules/dashboards/components/BotonDescarga';
 
 interface DashboardEmpresaDto {
   id: number;
@@ -202,6 +203,8 @@ export default function AdminReportesPage() {
               cargando={loadingDashboards || loadingPeriodos}
             />
           )}
+
+          <BotonDescarga url={periodoActual?.urlMega} />
         </div>
       </div>
 
@@ -228,17 +231,6 @@ export default function AdminReportesPage() {
             </h3>
             <p className="text-[11px] text-gray-400">Visualización interactiva y documentos adjuntos del periodo.</p>
           </div>
-
-          {periodoActual?.urlMega && (
-            <a
-              href={periodoActual.urlMega}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full md:w-auto min-h-[44px] md:min-h-0 justify-center px-4 py-2.5 md:px-3.5 md:py-1.5 bg-[#1B4589] hover:bg-[#143468] text-white text-xs font-bold rounded-lg transition-all shadow flex items-center gap-1.5 shrink-0"
-            >
-              <span>📥</span> Descargar
-            </a>
-          )}
         </div>
 
         {loadingDashboards || loadingPeriodos ? (
@@ -246,11 +238,7 @@ export default function AdminReportesPage() {
             <p className="text-[#1B4589] text-xs font-bold animate-pulse">Cargando...</p>
           </div>
         ) : periodoActual?.urlPowerbi ? (
-          <VisorReporte
-            key={periodoActual.id}
-            src={periodoActual.urlPowerbi}
-            titulo={`Reporte ${periodoActual.periodo}`}
-          />
+          <VisorReporte src={periodoActual.urlPowerbi} titulo={`Reporte ${empresaActual?.nombre ?? ''}`} />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 bg-[#E8ECF3] rounded-full flex items-center justify-center text-2xl mb-2 text-[#1B4589]">
