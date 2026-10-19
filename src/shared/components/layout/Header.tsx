@@ -27,12 +27,13 @@ export function Header({ onMenu }: { onMenu?: () => void }) {
   return (
     <header className="sticky top-0 z-30 h-14 sm:h-16 bg-white border-b border-gray-200 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 shadow-sm">
       <div className="flex items-center gap-1 min-w-0">
-        {/* Botón del menú (solo celular y tablet) */}
+        {/* Botón del menú: abre el cajón en celular y oculta o muestra el menú en escritorio */}
         <button
           type="button"
           onClick={onMenu}
-          aria-label="Abrir menú"
-          className="lg:hidden w-11 h-11 -ml-1 flex items-center justify-center rounded-lg text-[#1B4589] hover:bg-blue-50 active:bg-blue-100 shrink-0"
+          aria-label="Mostrar u ocultar el menú"
+          title="Mostrar u ocultar el menú"
+          className="w-11 h-11 -ml-1 flex items-center justify-center rounded-lg text-[#1B4589] hover:bg-blue-50 active:bg-blue-100 shrink-0"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
