@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 interface SidebarProps {
-  abierto?: boolean; // solo cuenta en celular y tablet: ahí el menú es un cajón
+  abierto?: boolean; // celular y tablet: el menú es un cajón
+  oculto?: boolean; // escritorio: el menú se puede esconder para dar más espacio
   onCerrar?: () => void;
 }
 
@@ -15,7 +16,7 @@ const enlaceBase =
 const enlaceActivo = 'bg-[#ED1C24] text-white shadow-md';
 const enlaceInactivo = 'text-blue-100 hover:bg-white/10 active:bg-white/15';
 
-export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
+export function Sidebar({ abierto = false, oculto = false, onCerrar }: SidebarProps) {
   const pathname = usePathname();
   const [rolId, setRolId] = useState<number | null>(null);
 
@@ -45,9 +46,9 @@ export function Sidebar({ abierto = false, onCerrar }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] overflow-y-auto bg-[#1B4589] text-white flex flex-col shadow-xl transition-transform duration-200 motion-reduce:transition-none lg:static lg:z-auto lg:w-64 lg:max-w-none lg:translate-x-0 lg:shadow-lg lg:shrink-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] overflow-y-auto bg-[#1B4589] text-white flex flex-col shadow-xl transition-[transform,width] duration-200 motion-reduce:transition-none lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-lg lg:shrink-0 ${
           abierto ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } ${oculto ? 'lg:w-0 lg:invisible lg:overflow-hidden' : 'lg:w-64'}`}
       >
         {/* Logotipo Corporativo Oficial */}
         <div className="relative p-6 border-b border-blue-900/50 flex flex-col items-center justify-center bg-white/5">
