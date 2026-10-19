@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { dashboardService, DashboardResponseDto } from '@/modules/dashboards/services/dashboardService';
 import { periodoService, PeriodoResponseDto, EnlacesPeriodoResponseDto } from '@/modules/dashboards/services/periodoService';
 import { VisorReporte } from '@/modules/dashboards/components/VisorReporte';
+import { SelectorPeriodo, etiquetaPeriodo } from '@/modules/dashboards/components/SelectorPeriodo';
 
 function PeriodosContent() {
   const searchParams = useSearchParams();
@@ -16,7 +17,6 @@ function PeriodosContent() {
   );
   
   const [periodos, setPeriodos] = useState<PeriodoResponseDto[]>([]);
-  const [selectedAnio, setSelectedAnio] = useState<string>('');
   const [selectedPeriodoStr, setSelectedPeriodoStr] = useState<string | null>(null);
   
   const [enlaces, setEnlaces] = useState<EnlacesPeriodoResponseDto | null>(null);
@@ -54,7 +54,6 @@ function PeriodosContent() {
       setLoadingPeriodos(true);
       setError('');
       setPeriodos([]);
-      setSelectedAnio('');
       setSelectedPeriodoStr(null);
       setEnlaces(null);
 
@@ -62,15 +61,9 @@ function PeriodosContent() {
         const data = await periodoService.getPeriodosPorDashboard(selectedDashboardId);
         setPeriodos(data);
         
+        // El más reciente queda seleccionado
         if (data.length > 0) {
-          const aniosUnicos = Array.from(new Set(data.map(p => p.periodo.substring(0, 4)))).sort().reverse();
-          const anioDefault = aniosUnicos[0];
-          setSelectedAnio(anioDefault);
-
-          const periodosDelAnio = data.filter(p => p.periodo.startsWith(anioDefault));
-          if (periodosDelAnio.length > 0) {
-            setSelectedPeriodoStr(periodosDelAnio[0].periodo);
-          }
+          setSelectedPeriodoStr(data[0].periodo);
         }
       } catch (err: any) {
         console.error('Error al cargar periodos:', err);
@@ -82,9 +75,6 @@ function PeriodosContent() {
 
     fetchPeriodos();
   }, [selectedDashboardId]);
-
-  const aniosDisponibles = Array.from(new Set(periodos.map(p => p.periodo.substring(0, 4)))).sort().reverse();
-  const periodosFiltradosPorAnio = periodos.filter(p => p.periodo.startsWith(selectedAnio));
 
   // 3. Cargar enlaces
   useEffect(() => {
@@ -106,17 +96,6 @@ function PeriodosContent() {
     fetchEnlaces();
   }, [selectedDashboardId, selectedPeriodoStr]);
 
-  const formatPeriodoLabel = (periodoStr: string) => {
-    if (!periodoStr || periodoStr.length !== 6) return periodoStr;
-    const anio = periodoStr.substring(0, 4);
-    const mesNum = parseInt(periodoStr.substring(4, 6), 10);
-    const meses = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-    return `${meses[mesNum - 1] || mesNum} ${anio}`;
-  };
-
   const currentDashboardNombre = dashboards
     .find(d => d.id === selectedDashboardId)
     ?.nombre.replace(/^Dashboard\s+/i, '');
@@ -135,7 +114,7 @@ function PeriodosContent() {
         </div>
 
         {!loadingDashboards && dashboards.length > 0 && (
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
             {dashboards.length > 1 ? (
               <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 w-full md:w-auto">
                 <span className="text-[11px] font-bold text-[#1B4589] uppercase tracking-wider">DASHBOARD:</span>
@@ -157,6 +136,13 @@ function PeriodosContent() {
                 <span className="text-xs font-bold text-[#1B4589]">{currentDashboardNombre}</span>
               </div>
             )}
+
+            <SelectorPeriodo
+              periodos={periodos}
+              valor={selectedPeriodoStr}
+              onCambiar={setSelectedPeriodoStr}
+              cargando={loadingPeriodos}
+            />
           </div>
         )}
       </div>
@@ -167,77 +153,12 @@ function PeriodosContent() {
         </div>
       )}
 
-      {/* Selector de Años y Meses Compacto */}
-      {periodos.length > 0 && (
-        <div className="bg-white px-4 py-3 rounded-xl shadow-sm border border-gray-100 space-y-2">
-          {aniosDisponibles.length > 1 && (
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 overflow-x-auto">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 px-1">
-                AÑO:
-              </span>
-              <div className="flex items-center gap-1.5">
-                {aniosDisponibles.map((anio) => {
-                  const isAnioSelected = selectedAnio === anio;
-                  return (
-                    <button
-                      key={anio}
-                      onClick={() => {
-                        setSelectedAnio(anio);
-                        const primerMesDelAnio = periodos.find(p => p.periodo.startsWith(anio));
-                        if (primerMesDelAnio) {
-                          setSelectedPeriodoStr(primerMesDelAnio.periodo);
-                        }
-                      }}
-                      className={`px-4 py-2.5 sm:px-3 sm:py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                        isAnioSelected
-                          ? 'bg-[#1B4589] text-white shadow-sm'
-                          : 'bg-gray-100 text-[#231F20] hover:bg-gray-200'
-                      }`}
-                    >
-                      {anio}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 overflow-x-auto py-0.5">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 px-1">
-              PERIODOS:
-            </span>
-            <div className="flex items-center gap-1.5">
-              {periodosFiltradosPorAnio.map((p) => {
-                const isSelected = selectedPeriodoStr === p.periodo;
-                const mesNombre = formatPeriodoLabel(p.periodo).split(' ')[0];
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedPeriodoStr(p.periodo)}
-                    className={`px-4 py-2.5 sm:px-3.5 sm:py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-[#1B4589] text-white shadow-sm'
-                        : 'bg-gray-100 text-[#231F20] hover:bg-gray-200'
-                    }`}
-                  >
-                    <span>{mesNombre}</span>
-                    <span className={`text-[10px] px-1 py-0.2 rounded font-mono ${isSelected ? 'bg-white/20 text-white' : 'bg-white text-gray-500 border border-gray-200'}`}>
-                      {p.periodo}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Visor Principal Optimizado */}
       <div className="bg-white p-3 sm:p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between space-y-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <div>
             <h3 className="font-bold text-base text-[#1B4589]">
-              {selectedPeriodoStr ? `Reporte del Periodo: ${formatPeriodoLabel(selectedPeriodoStr)}` : 'Seleccione un periodo'}
+              {selectedPeriodoStr ? `Reporte del Periodo: ${etiquetaPeriodo(selectedPeriodoStr)}` : 'Seleccione un periodo'}
             </h3>
             <p className="text-[11px] text-gray-400">Visualización interactiva y documentos adjuntos del periodo.</p>
           </div>
