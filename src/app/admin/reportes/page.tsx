@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { httpClient } from '@/shared/lib/httpClient';
 import { empresaService, EmpresaDto } from '@/modules/empresas/services/empresaService';
 import { VisorReporte } from '@/modules/dashboards/components/VisorReporte';
+import { SelectorPeriodo } from '@/modules/dashboards/components/SelectorPeriodo';
 
 interface DashboardEmpresaDto {
   id: number;
@@ -42,7 +43,6 @@ export default function AdminReportesPage() {
   const [dashboards, setDashboards] = useState<DashboardEmpresaDto[]>([]);
   const [dashboardId, setDashboardId] = useState<number | null>(null);
   const [periodos, setPeriodos] = useState<PeriodoAdminDto[]>([]);
-  const [anio, setAnio] = useState('');
   const [periodo, setPeriodo] = useState<string | null>(null);
 
   const [loadingEmpresas, setLoadingEmpresas] = useState(true);
@@ -109,7 +109,6 @@ export default function AdminReportesPage() {
         const ordenados = [...data].sort((a, b) => b.periodo.localeCompare(a.periodo));
         setPeriodos(ordenados);
         if (ordenados.length > 0) {
-          setAnio(ordenados[0].periodo.substring(0, 4));
           setPeriodo(ordenados[0].periodo);
         }
       })
@@ -124,8 +123,6 @@ export default function AdminReportesPage() {
     };
   }, [dashboardId]);
 
-  const aniosDisponibles = Array.from(new Set(periodos.map((p) => p.periodo.substring(0, 4))));
-  const periodosDelAnio = periodos.filter((p) => p.periodo.startsWith(anio));
   const periodoActual = periodos.find((p) => p.periodo === periodo) || null;
   const dashboardActual = dashboards.find((d) => d.id === dashboardId) || null;
   const empresaActual = empresas.find((e) => e.id === empresaId) || null;
@@ -137,7 +134,6 @@ export default function AdminReportesPage() {
     setDashboards([]);
     setDashboardId(null);
     setPeriodos([]);
-    setAnio('');
     setPeriodo(null);
     setError('');
     setLoadingDashboards(id !== null);
@@ -146,16 +142,9 @@ export default function AdminReportesPage() {
   const elegirDashboard = (id: number) => {
     setDashboardId(id);
     setPeriodos([]);
-    setAnio('');
     setPeriodo(null);
     setError('');
     setLoadingPeriodos(true);
-  };
-
-  const elegirAnio = (nuevo: string) => {
-    setAnio(nuevo);
-    const primero = periodos.find((p) => p.periodo.startsWith(nuevo));
-    if (primero) setPeriodo(primero.periodo);
   };
 
   return (
@@ -204,6 +193,15 @@ export default function AdminReportesPage() {
               </select>
             </div>
           )}
+
+          {empresaId !== null && (
+            <SelectorPeriodo
+              periodos={periodos}
+              valor={periodo}
+              onCambiar={setPeriodo}
+              cargando={loadingDashboards || loadingPeriodos}
+            />
+          )}
         </div>
       </div>
 
@@ -216,57 +214,6 @@ export default function AdminReportesPage() {
       {dashboardInactivo && (
         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-xs font-medium">
           Este dashboard o su asignación a la empresa está inactivo: el cliente no lo ve, pero tú sí.
-        </div>
-      )}
-
-      {/* Año y periodo */}
-      {periodos.length > 0 && (
-        <div className="bg-white px-4 py-3 rounded-xl shadow-sm border border-gray-100 space-y-2">
-          {aniosDisponibles.length > 1 && (
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 overflow-x-auto">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 px-1">AÑO:</span>
-              <div className="flex items-center gap-1.5">
-                {aniosDisponibles.map((a) => (
-                  <button
-                    key={a}
-                    onClick={() => elegirAnio(a)}
-                    className={`px-4 py-2.5 sm:px-3 sm:py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                      anio === a ? 'bg-[#1B4589] text-white shadow-sm' : 'bg-gray-100 text-[#231F20] hover:bg-gray-200'
-                    }`}
-                  >
-                    {a}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 overflow-x-auto py-0.5">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider shrink-0 px-1">PERIODOS:</span>
-            <div className="flex items-center gap-1.5">
-              {periodosDelAnio.map((p) => {
-                const seleccionado = periodo === p.periodo;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => setPeriodo(p.periodo)}
-                    className={`px-4 py-2.5 sm:px-3.5 sm:py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
-                      seleccionado ? 'bg-[#1B4589] text-white shadow-sm' : 'bg-gray-100 text-[#231F20] hover:bg-gray-200'
-                    }`}
-                  >
-                    <span>{formatPeriodoLabel(p.periodo).split(' ')[0]}</span>
-                    <span
-                      className={`text-[10px] px-1 rounded font-mono ${
-                        seleccionado ? 'bg-white/20 text-white' : 'bg-white text-gray-500 border border-gray-200'
-                      }`}
-                    >
-                      {p.periodo}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       )}
 
