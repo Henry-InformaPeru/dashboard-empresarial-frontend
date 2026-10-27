@@ -13,6 +13,7 @@ interface DashboardEmpresaDto {
   nombre: string;
   descripcion: string | null;
   estado: string;
+  urlPowerbi: string | null; // vínculo de Power BI del reporte
   asignacion: { estado: string };
 }
 
@@ -21,7 +22,7 @@ interface PeriodoAdminDto {
   id: number;
   dashboardId: number;
   periodo: string; // AAAAMM
-  urlPowerbi: string;
+  urlPowerbi: string | null; // el del periodo si tiene uno propio; si no, el del reporte
   urlMega: string | null;
 }
 
@@ -127,6 +128,8 @@ export default function AdminReportesPage() {
   const periodoActual = periodos.find((p) => p.periodo === periodo) || null;
   const dashboardActual = dashboards.find((d) => d.id === dashboardId) || null;
   const empresaActual = empresas.find((e) => e.id === empresaId) || null;
+  // El vínculo de Power BI es del reporte: se ve aunque no tenga periodos (un periodo solo lleva uno propio si ese mes usa otro reporte)
+  const urlReporte = periodoActual?.urlPowerbi ?? dashboardActual?.urlPowerbi ?? null;
   const dashboardInactivo =
     !!dashboardActual && (dashboardActual.estado !== 'ACTIVO' || dashboardActual.asignacion.estado !== 'ACTIVO');
 
@@ -155,7 +158,7 @@ export default function AdminReportesPage() {
         <div>
           <h2 className="text-xl font-bold text-[#1B4589]">Reportes y Periodos</h2>
           <p className="text-[#231F20] text-xs mt-0.5">
-            Elige una empresa y un periodo para ver su reporte, tal como lo ve el cliente.
+            Elige una empresa para ver su reporte, tal como lo ve el cliente.
           </p>
         </div>
 
@@ -195,7 +198,7 @@ export default function AdminReportesPage() {
             </div>
           )}
 
-          {empresaId !== null && (
+          {empresaId !== null && (loadingDashboards || loadingPeriodos || periodos.length > 0) && (
             <SelectorPeriodo
               periodos={periodos}
               valor={periodo}
@@ -225,11 +228,15 @@ export default function AdminReportesPage() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <div>
             <h3 className="font-bold text-base text-[#1B4589]">
-              {periodoActual
-                ? `${empresaActual?.nombre ?? ''} · ${formatPeriodoLabel(periodoActual.periodo)}`
-                : 'Selecciona una empresa y un periodo'}
+              {empresaActual
+                ? periodoActual
+                  ? `${empresaActual.nombre} · ${formatPeriodoLabel(periodoActual.periodo)}`
+                  : empresaActual.nombre
+                : 'Selecciona una empresa'}
             </h3>
-            <p className="text-[11px] text-gray-400">Visualización interactiva y documentos adjuntos del periodo.</p>
+            <p className="text-[11px] text-gray-400">
+              {periodos.length > 0 ? 'Visualización interactiva y documentos adjuntos del periodo.' : 'Visualización interactiva del reporte.'}
+            </p>
           </div>
         </div>
 
@@ -237,8 +244,8 @@ export default function AdminReportesPage() {
           <div className="flex flex-col items-center justify-center py-24">
             <p className="text-[#1B4589] text-xs font-bold animate-pulse">Cargando...</p>
           </div>
-        ) : periodoActual?.urlPowerbi ? (
-          <VisorReporte src={periodoActual.urlPowerbi} titulo={`Reporte ${empresaActual?.nombre ?? ''}`} />
+        ) : urlReporte ? (
+          <VisorReporte src={urlReporte} titulo={`Reporte ${empresaActual?.nombre ?? ''}`} />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 bg-[#E8ECF3] rounded-full flex items-center justify-center text-2xl mb-2 text-[#1B4589]">
@@ -249,10 +256,10 @@ export default function AdminReportesPage() {
                 ? 'Elige una empresa para ver sus reportes.'
                 : dashboards.length === 0
                   ? 'Esta empresa no tiene dashboards asignados.'
-                  : 'Este dashboard no tiene periodos registrados.'}
+                  : 'Este reporte todavía no tiene vínculo de Power BI.'}
             </p>
             <p className="text-[11px] text-gray-400 mt-0.5">
-              Los dashboards y periodos se administran en «Gestión de Empresas».
+              El vínculo de Power BI y los periodos se administran en «Gestión de Empresas».
             </p>
           </div>
         )}

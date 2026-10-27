@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { httpClient } from '@/shared/lib/httpClient';
 import { extraerEnlacePowerBi, periodoSiguiente, validarEnlaceDescarga } from '@/modules/dashboards/lib/enlaces';
@@ -17,56 +17,78 @@ interface DashboardAsignadoDto {
   nombre: string;
   codigo: string;
   estado: string;
+  urlPowerbi: string | null; // vínculo de Power BI del reporte
 }
 
 interface PeriodoAdminDto {
   id: number;
   dashboardId: number;
   periodo: string;
-  urlPowerbi: string;
+  urlPowerbi: string | null; // el del periodo si tiene uno propio; si no, el del reporte
   urlMega: string | null;
 }
+
+// El servidor manda su mensaje como texto o como lista de textos; si no hay, se usa el de siempre.
+function mensajeDelServidor(err: unknown, porDefecto: string): string {
+  const mensaje = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+  return Array.isArray(mensaje) ? mensaje.join(' ') : mensaje || porDefecto;
+}
+
+const quitarPrefijo = (nombre: string) => nombre.replace(/^Dashboard\s+/i, '');
 
 export default function AdminEmpresaPeriodosPage() {
   const params = useParams();
   const empresaId = params.id;
 
   const [empresa, setEmpresa] = useState<EmpresaDto | null>(null);
+  const [dashboards, setDashboards] = useState<DashboardAsignadoDto[]>([]);
   const [selectedDashboardId, setSelectedDashboardId] = useState<number | null>(null);
   const [periodos, setPeriodos] = useState<PeriodoAdminDto[]>([]);
-  
+
   const [loadingEmpresa, setLoadingEmpresa] = useState(true);
   const [loadingPeriodos, setLoadingPeriodos] = useState(false);
+  const [guardandoVinculo, setGuardandoVinculo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Campos para nuevo periodo
-  const [nuevoPeriodo, setNuevoPeriodo] = useState('');
+  // Vínculo de Power BI del reporte: se pega una sola vez. Lo pegado puede ser el HTML de «Código para insertar» o su vínculo:
+  // se analiza al instante y se guarda solo el vínculo.
   const [urlPowerbi, setUrlPowerbi] = useState('');
-  const [urlMega, setUrlMega] = useState('');
-  // Lo que se pegó en «Power BI» puede ser el HTML de «Código para insertar» o su vínculo: se analiza al instante y se guarda solo el vínculo.
+  const [editandoVinculo, setEditandoVinculo] = useState(false);
   const analisisPowerbi = useMemo(() => (urlPowerbi.trim() ? extraerEnlacePowerBi(urlPowerbi) : null), [urlPowerbi]);
-  const analisisMega = useMemo(() => (urlMega.trim() ? validarEnlaceDescarga(urlMega) : null), [urlMega]);
-  // La primera vez que llegan los periodos se deja listo el siguiente: el mes que sigue y el mismo vínculo de Power BI del último periodo.
-  const preparado = useRef(false);
 
-  // 1. Cargar la información de la Empresa y su Dashboard asociado automáticamente
+  // Periodos (opcionales): cada uno puede llevar la descarga de MEGA de ese mes
+  const [nuevoPeriodo, setNuevoPeriodo] = useState('');
+  const [urlMega, setUrlMega] = useState('');
+  const analisisMega = useMemo(() => (urlMega.trim() ? validarEnlaceDescarga(urlMega) : null), [urlMega]);
+
+  const dashboardActual = dashboards.find((d) => d.id === selectedDashboardId) ?? null;
+  // Los reportes anteriores guardaban el vínculo en cada periodo: si el reporte aún no lo tiene, se muestra el del periodo más reciente.
+  const periodoReciente = periodos.reduce<PeriodoAdminDto | null>((a, p) => (!a || p.periodo > a.periodo ? p : a), null);
+  const vinculoActual = dashboardActual?.urlPowerbi ?? periodoReciente?.urlPowerbi ?? null;
+
+  const cargarPeriodos = async (dashboardId: number) => {
+    const { data } = await httpClient.get<PeriodoAdminDto[]>(`/dashboards/${dashboardId}/periodos`);
+    setPeriodos(data);
+    return data;
+  };
+
+  // 1. Cargar la información de la Empresa y los reportes que tiene asignados (al registrar la empresa se le crea su dashboard)
   useEffect(() => {
     const fetchEmpresaYDashboards = async () => {
       try {
-        // Obtenemos los datos de la empresa para mostrar su nombre
         const resEmpresa = await httpClient.get<EmpresaDto>(`/empresas/${empresaId}`);
         setEmpresa(resEmpresa.data);
 
-        // Obtenemos los dashboards de la empresa para capturar el ID de forma interna
         const resDashboards = await httpClient.get<DashboardAsignadoDto[]>(`/empresas/${empresaId}/dashboards`);
+        setDashboards(resDashboards.data);
         if (resDashboards.data.length > 0) {
-          setSelectedDashboardId(resDashboards.data[0].id); // Asignación automática del ID oculto
+          setSelectedDashboardId(resDashboards.data[0].id);
         } else {
-          setError('Esta empresa no tiene un dashboard vinculado para registrar periodos.');
+          setError('Esta empresa no tiene un reporte vinculado.');
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error al cargar la información:', err);
         setError('No se pudo obtener la configuración para esta empresa.');
       } finally {
@@ -77,23 +99,22 @@ export default function AdminEmpresaPeriodosPage() {
     if (empresaId) fetchEmpresaYDashboards();
   }, [empresaId]);
 
-  // 2. Cargar Periodos del Dashboard obtenido automáticamente
+  // 2. Cargar los periodos del reporte elegido y dejar listo el siguiente
   useEffect(() => {
     if (!selectedDashboardId) return;
 
     const fetchPeriodos = async () => {
       setLoadingPeriodos(true);
       setError('');
+      setSuccessMsg('');
+      setEditandoVinculo(false);
+      setUrlPowerbi('');
+      setUrlMega('');
       try {
-        const { data } = await httpClient.get<PeriodoAdminDto[]>(`/dashboards/${selectedDashboardId}/periodos`);
-        setPeriodos(data);
-        if (!preparado.current) {
-          preparado.current = true;
-          const ultimo = data.reduce<PeriodoAdminDto | null>((a, p) => (!a || p.periodo > a.periodo ? p : a), null);
-          if (ultimo) setUrlPowerbi(ultimo.urlPowerbi);
-          setNuevoPeriodo(periodoSiguiente(ultimo?.periodo));
-        }
-      } catch (err: any) {
+        const data = await cargarPeriodos(selectedDashboardId);
+        const ultimo = data.reduce<PeriodoAdminDto | null>((a, p) => (!a || p.periodo > a.periodo ? p : a), null);
+        setNuevoPeriodo(periodoSiguiente(ultimo?.periodo));
+      } catch (err: unknown) {
         console.error('Error al cargar periodos:', err);
         setError('No se pudieron obtener los periodos.');
       } finally {
@@ -104,11 +125,53 @@ export default function AdminEmpresaPeriodosPage() {
     fetchPeriodos();
   }, [selectedDashboardId]);
 
-  // 3. Registrar un nuevo Periodo usando el ID obtenido automáticamente
+  // 3. Guardar el vínculo de Power BI del reporte (vale para todos sus periodos)
+  const handleGuardarVinculo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDashboardId) {
+      setError('No hay un reporte válido vinculado a esta empresa.');
+      return;
+    }
+
+    setError('');
+    setSuccessMsg('');
+    const powerbi = extraerEnlacePowerBi(urlPowerbi);
+    if (!powerbi.ok) {
+      setError(powerbi.motivo);
+      return;
+    }
+
+    setGuardandoVinculo(true);
+
+    try {
+      await httpClient.patch(`/dashboards/${selectedDashboardId}/powerbi`, { urlPowerbi: powerbi.url });
+
+      setDashboards((actuales) =>
+        actuales.map((d) => (d.id === selectedDashboardId ? { ...d, urlPowerbi: powerbi.url } : d)),
+      );
+      setUrlPowerbi('');
+      setEditandoVinculo(false);
+      const data = await cargarPeriodos(selectedDashboardId);
+      setSuccessMsg(
+        data.length === 0
+          ? 'Vínculo de Power BI guardado: el cliente ya ve su reporte. Los periodos son opcionales.'
+          : data.length === 1
+            ? 'Vínculo de Power BI guardado: ya lo usa el periodo de este reporte.'
+            : `Vínculo de Power BI guardado: ya lo usan los ${data.length} periodos de este reporte.`,
+      );
+    } catch (err: unknown) {
+      console.error('Error al guardar el vínculo:', err);
+      setError(mensajeDelServidor(err, 'Error al guardar el vínculo en el servidor.'));
+    } finally {
+      setGuardandoVinculo(false);
+    }
+  };
+
+  // 4. Registrar un periodo (opcional): el periodo y, si hay, su descarga de MEGA
   const handleCrearPeriodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDashboardId) {
-      setError('No hay un dashboard válido vinculado a esta empresa.');
+      setError('No hay un reporte válido vinculado a esta empresa.');
       return;
     }
 
@@ -116,11 +179,6 @@ export default function AdminEmpresaPeriodosPage() {
     setSuccessMsg('');
     if (!/^\d{4}(0[1-9]|1[0-2])$/.test(nuevoPeriodo)) {
       setError('El periodo debe tener el formato AAAAMM, por ejemplo 202610.');
-      return;
-    }
-    const powerbi = extraerEnlacePowerBi(urlPowerbi);
-    if (!powerbi.ok) {
-      setError(powerbi.motivo);
       return;
     }
     const descarga = validarEnlaceDescarga(urlMega);
@@ -134,25 +192,23 @@ export default function AdminEmpresaPeriodosPage() {
     try {
       await httpClient.post(`/dashboards/${selectedDashboardId}/periodos`, {
         periodo: nuevoPeriodo,
-        urlPowerbi: powerbi.url,
         urlMega: descarga.url,
       });
 
-      setSuccessMsg(`Periodo ${nuevoPeriodo} registrado. Quedó listo el siguiente con el mismo vínculo de Power BI: solo falta su descarga de MEGA.`);
+      setSuccessMsg(`Periodo ${nuevoPeriodo} registrado.`);
       setNuevoPeriodo(periodoSiguiente(nuevoPeriodo));
-      setUrlPowerbi(powerbi.url);
       setUrlMega('');
-
-      // Recargar la lista de periodos
-      const { data } = await httpClient.get<PeriodoAdminDto[]>(`/dashboards/${selectedDashboardId}/periodos`);
-      setPeriodos(data);
-    } catch (err: any) {
+      await cargarPeriodos(selectedDashboardId);
+    } catch (err: unknown) {
       console.error('Error al crear periodo:', err);
-      setError(err.response?.data?.message || 'Error al guardar el periodo en el servidor.');
+      setError(mensajeDelServidor(err, 'Error al guardar el periodo en el servidor.'));
     } finally {
       setSubmitting(false);
     }
   };
+
+  const areaTexto =
+    'w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50';
 
   return (
     <div className="space-y-6">
@@ -163,7 +219,7 @@ export default function AdminEmpresaPeriodosPage() {
             Gestión de Periodos y Enlaces
           </h2>
           <p className="text-gray-500 text-xs mt-0.5">
-            Administra los enlaces de PowerBI y descargas asignados por periodo a esta empresa.
+            Define el vínculo de Power BI del reporte de esta empresa y, si quieres, sus periodos con la descarga de MEGA.
           </p>
         </div>
         <a
@@ -186,19 +242,129 @@ export default function AdminEmpresaPeriodosPage() {
         </div>
       )}
 
-      {/* Identificador de Empresa (Reemplazo visual del desplegable, manteniendo la lógica del ID) */}
+      {/* Empresa y reporte */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap items-center gap-2 sm:gap-3">
         <span className="text-xs font-bold text-[#1B4589] uppercase tracking-wider">EMPRESA:</span>
         <span className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-[#231F20]">
           {loadingEmpresa ? 'Cargando...' : empresa?.nombre || 'Empresa No Encontrada'} {empresa?.ruc ? `(RUC: ${empresa.ruc})` : ''}
         </span>
+        {dashboards.length > 1 && (
+          <>
+            <span className="text-xs font-bold text-[#1B4589] uppercase tracking-wider sm:ml-2">REPORTE:</span>
+            <select
+              value={selectedDashboardId ?? ''}
+              onChange={(e) => setSelectedDashboardId(Number(e.target.value))}
+              className="px-2 py-2 sm:py-1 border border-gray-300 rounded text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold"
+            >
+              {dashboards.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {quitarPrefijo(d.nombre)}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
       </div>
 
-      {/* Formulario de Nuevo Periodo */}
+      {/* Vínculo de Power BI del reporte */}
       <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="font-bold text-sm text-[#1B4589] mb-4">
-          Asignar Nuevo Periodo y Enlaces
-        </h3>
+        <h3 className="font-bold text-sm text-[#1B4589]">Vínculo de Power BI del reporte</h3>
+        <p className="text-gray-500 text-xs mt-0.5 mb-4">
+          Se pega una sola vez y vale para todos los periodos. El cliente ve su reporte apenas lo guardes, aunque no cargues ningún periodo.
+        </p>
+
+        {vinculoActual && !editandoVinculo ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="min-w-0 text-[11px] text-green-700">
+              ✓ Vínculo de Power BI configurado.{' '}
+              <a href={vinculoActual} target="_blank" rel="noopener noreferrer" className="font-bold underline">
+                Probarlo
+              </a>
+              <span className="block font-mono text-gray-500 truncate">{vinculoActual}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditandoVinculo(true)}
+              className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-[#1B4589] font-bold text-xs rounded-lg transition-all shrink-0"
+            >
+              Cambiar vínculo
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleGuardarVinculo} className="space-y-3">
+            <div>
+              <label htmlFor="powerbi" className="block text-xs font-medium text-[#231F20] mb-1">
+                Power BI (HTML o vínculo)
+              </label>
+              <textarea
+                id="powerbi"
+                rows={3}
+                spellCheck={false}
+                placeholder={'Pega aquí el «HTML para pegar en un sitio web» de Power BI (empieza con <iframe …>) o su vínculo https://app.powerbi.com/view?r=…'}
+                value={urlPowerbi}
+                onChange={(e) => setUrlPowerbi(e.target.value)}
+                required
+                className={`${areaTexto} font-mono`}
+              />
+              {analisisPowerbi === null ? (
+                <p className="mt-1.5 text-[11px] text-gray-500">
+                  En Power BI: «Publicar en la web» → «Código para insertar». Copia el «HTML para pegar en un sitio web»; también sirve el vínculo.
+                </p>
+              ) : analisisPowerbi.ok ? (
+                <div className="mt-1.5 text-[11px] text-green-700">
+                  ✓ Vínculo de Power BI detectado{analisisPowerbi.titulo ? ` · reporte «${analisisPowerbi.titulo}»` : ''}. Se guarda solo el vínculo.{' '}
+                  <a href={analisisPowerbi.url} target="_blank" rel="noopener noreferrer" className="font-bold underline">
+                    Probarlo
+                  </a>
+                  <span className="block font-mono text-gray-500 truncate">{analisisPowerbi.url}</span>
+                </div>
+              ) : (
+                <p className="mt-1.5 text-[11px] text-[#ED1C24]">⚠️ {analisisPowerbi.motivo}</p>
+              )}
+            </div>
+
+            {!vinculoActual && !loadingPeriodos && selectedDashboardId && (
+              <p className="text-[11px] text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                Este reporte todavía no tiene vínculo de Power BI: el cliente no verá nada hasta que lo guardes.
+              </p>
+            )}
+            {editandoVinculo && periodos.length > 0 && (
+              <p className="text-[11px] text-gray-500">
+                El vínculo nuevo se aplica también {periodos.length === 1 ? 'al periodo ya cargado' : `a los ${periodos.length} periodos ya cargados`}. Las descargas de MEGA no cambian.
+              </p>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="submit"
+                disabled={guardandoVinculo || !selectedDashboardId}
+                className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm disabled:opacity-50"
+              >
+                {guardandoVinculo ? 'Guardando...' : 'Guardar vínculo'}
+              </button>
+              {editandoVinculo && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditandoVinculo(false);
+                    setUrlPowerbi('');
+                  }}
+                  className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2 bg-gray-100 hover:bg-gray-200 text-[#1B4589] font-bold text-xs rounded-lg transition-all"
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* Periodos (opcionales): descarga de MEGA por mes */}
+      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 className="font-bold text-sm text-[#1B4589]">Periodos y descargas — opcional</h3>
+        <p className="text-gray-500 text-xs mt-0.5 mb-4">
+          Los periodos no hacen falta para ver el reporte. Sirven para que el cliente descargue de MEGA el archivo de cada mes.
+        </p>
 
         <form onSubmit={handleCrearPeriodo} className="grid grid-cols-1 md:grid-cols-6 gap-4 items-start">
           <div className="md:col-span-1">
@@ -214,7 +380,7 @@ export default function AdminEmpresaPeriodosPage() {
               onChange={(e) => setNuevoPeriodo(e.target.value.replace(/\D/g, ''))}
               required
               maxLength={6}
-              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-mono"
+              className={`${areaTexto} font-mono`}
             />
           </div>
 
@@ -230,7 +396,7 @@ export default function AdminEmpresaPeriodosPage() {
               placeholder="https://mega.nz/..."
               value={urlMega}
               onChange={(e) => setUrlMega(e.target.value)}
-              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+              className={areaTexto}
             />
             {analisisMega && !analisisMega.ok ? (
               <p className="mt-1.5 text-[11px] text-[#ED1C24]">⚠️ {analisisMega.motivo}</p>
@@ -247,37 +413,6 @@ export default function AdminEmpresaPeriodosPage() {
             >
               {submitting ? 'Guardando...' : '+ Registrar Periodo'}
             </button>
-          </div>
-
-          <div className="md:col-span-6">
-            <label htmlFor="powerbi" className="block text-xs font-medium text-[#231F20] mb-1">
-              Power BI (HTML o vínculo)
-            </label>
-            <textarea
-              id="powerbi"
-              rows={3}
-              spellCheck={false}
-              placeholder={'Pega aquí el «HTML para pegar en un sitio web» de Power BI (empieza con <iframe …>) o su vínculo https://app.powerbi.com/view?r=…'}
-              value={urlPowerbi}
-              onChange={(e) => setUrlPowerbi(e.target.value)}
-              required
-              className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50 font-mono"
-            />
-            {analisisPowerbi === null ? (
-              <p className="mt-1.5 text-[11px] text-gray-500">
-                En Power BI: «Publicar en la web» → «Código para insertar». Copia el «HTML para pegar en un sitio web»; también sirve el vínculo. El mismo vínculo vale para todos los periodos de esta empresa.
-              </p>
-            ) : analisisPowerbi.ok ? (
-              <div className="mt-1.5 text-[11px] text-green-700">
-                ✓ Vínculo de Power BI detectado{analisisPowerbi.titulo ? ` · reporte «${analisisPowerbi.titulo}»` : ''}. Se guarda solo el vínculo.{' '}
-                <a href={analisisPowerbi.url} target="_blank" rel="noopener noreferrer" className="font-bold underline">
-                  Probarlo
-                </a>
-                <span className="block font-mono text-gray-500 truncate">{analisisPowerbi.url}</span>
-              </div>
-            ) : (
-              <p className="mt-1.5 text-[11px] text-[#ED1C24]">⚠️ {analisisPowerbi.motivo}</p>
-            )}
           </div>
         </form>
       </div>
@@ -301,8 +436,7 @@ export default function AdminEmpresaPeriodosPage() {
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                   <th className="py-3 px-6">Periodo</th>
-                  <th className="py-3 px-6">PowerBI URL</th>
-                  <th className="py-3 px-6">Mega URL</th>
+                  <th className="py-3 px-6">Descarga (MEGA)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-xs text-[#231F20]">
@@ -310,11 +444,6 @@ export default function AdminEmpresaPeriodosPage() {
                   <tr key={p.id} className="hover:bg-blue-50/30 transition-colors">
                     <td className="py-4 px-6 font-mono font-bold text-[#1B4589]">
                       {p.periodo}
-                    </td>
-                    <td className="py-4 px-6 text-gray-600 truncate max-w-xs">
-                      <a href={p.urlPowerbi} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                        {p.urlPowerbi}
-                      </a>
                     </td>
                     <td className="py-4 px-6 text-gray-600 truncate max-w-xs">
                       {p.urlMega ? (
@@ -335,33 +464,26 @@ export default function AdminEmpresaPeriodosPage() {
             {periodos.map((p) => (
               <div key={p.id} className="p-4 flex items-center justify-between gap-3">
                 <p className="font-mono font-bold text-[#1B4589] text-base">{p.periodo}</p>
-                <div className="flex items-center gap-2">
+                {p.urlMega ? (
                   <a
-                    href={p.urlPowerbi}
+                    href={p.urlMega}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center min-h-[44px] px-3 text-xs font-bold text-[#1B4589] border border-[#1B4589]/30 rounded-lg active:bg-blue-50"
+                    className="flex items-center justify-center min-h-[44px] px-3 text-xs font-bold text-[#ED1C24] border border-[#ED1C24]/30 rounded-lg active:bg-red-50"
                   >
-                    Power BI
+                    Descarga
                   </a>
-                  {p.urlMega && (
-                    <a
-                      href={p.urlMega}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center min-h-[44px] px-3 text-xs font-bold text-[#ED1C24] border border-[#ED1C24]/30 rounded-lg active:bg-red-50"
-                    >
-                      Descarga
-                    </a>
-                  )}
-                </div>
+                ) : (
+                  <span className="text-xs text-gray-400 italic">Sin descarga</span>
+                )}
               </div>
             ))}
           </div>
           </>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-xs font-semibold text-gray-500">No hay periodos registrados para esta empresa.</p>
+            <p className="text-xs font-semibold text-gray-500">No hay periodos registrados para este reporte.</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">No pasa nada: el cliente ve su reporte igual.</p>
           </div>
         )}
       </div>

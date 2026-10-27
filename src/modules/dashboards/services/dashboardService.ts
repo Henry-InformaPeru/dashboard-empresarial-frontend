@@ -6,6 +6,7 @@ export interface DashboardResponseDto {
   nombre: string;
   descripcion: string | null;
   estado: string;
+  urlPowerbi: string | null; // vínculo de Power BI del reporte (el mismo para todos sus periodos)
 }
 
 export const dashboardService = {
