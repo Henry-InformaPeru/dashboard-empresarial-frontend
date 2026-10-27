@@ -64,7 +64,7 @@ function PeriodosContent() {
         }
       } catch (err: any) {
         console.error('Error al cargar periodos:', err);
-        setError('Este dashboard no cuenta con periodos activos o no tienes acceso.');
+        setError('No se pudieron cargar los periodos de este reporte o no tienes acceso.');
       } finally {
         setLoadingPeriodos(false);
       }
@@ -77,10 +77,13 @@ function PeriodosContent() {
   // Cambiar de periodo NO recarga el reporte: el periodo se cambia dentro del propio Power BI y, si el enlace es el mismo,
   // la página no lo vuelve a cargar; solo cambian el título y el botón de descarga.
   const periodoActual = periodos.find((p) => p.periodo === selectedPeriodoStr) || null;
+  const dashboardActual = dashboards.find((d) => d.id === selectedDashboardId) || null;
 
-  const currentDashboardNombre = dashboards
-    .find(d => d.id === selectedDashboardId)
-    ?.nombre.replace(/^Dashboard\s+/i, '');
+  // El vínculo de Power BI es del reporte: aunque el reporte no tenga ningún periodo, el cliente lo ve.
+  // Los periodos son opcionales y sirven sobre todo para la descarga de MEGA; uno solo lleva vínculo propio si ese mes usa otro reporte.
+  const urlReporte = periodoActual?.urlPowerbi ?? dashboardActual?.urlPowerbi ?? null;
+
+  const currentDashboardNombre = dashboardActual?.nombre.replace(/^Dashboard\s+/i, '');
 
   return (
     <div className="space-y-4">
@@ -91,7 +94,7 @@ function PeriodosContent() {
             Reportes y Periodos
           </h2>
           <p className="text-[#231F20] text-xs mt-0.5">
-            Visualiza los reportes interactivos seleccionando el periodo de tu interés.
+            Visualiza tu reporte interactivo y, si hay periodos disponibles, descarga el archivo del periodo que necesites.
           </p>
         </div>
 
@@ -119,14 +122,19 @@ function PeriodosContent() {
               </div>
             )}
 
-            <SelectorPeriodo
-              periodos={periodos}
-              valor={selectedPeriodoStr}
-              onCambiar={setSelectedPeriodoStr}
-              cargando={loadingPeriodos}
-            />
+            {/* Los periodos son opcionales: sin ninguno, solo se ve el reporte */}
+            {(loadingPeriodos || periodos.length > 0) && (
+              <>
+                <SelectorPeriodo
+                  periodos={periodos}
+                  valor={selectedPeriodoStr}
+                  onCambiar={setSelectedPeriodoStr}
+                  cargando={loadingPeriodos}
+                />
 
-            <BotonDescarga url={periodoActual?.urlMega} />
+                <BotonDescarga url={periodoActual?.urlMega} />
+              </>
+            )}
           </div>
         )}
       </div>
@@ -142,9 +150,11 @@ function PeriodosContent() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <div>
             <h3 className="font-bold text-base text-[#1B4589]">
-              {selectedPeriodoStr ? `Reporte del Periodo: ${etiquetaPeriodo(selectedPeriodoStr)}` : 'Seleccione un periodo'}
+              {selectedPeriodoStr ? `Reporte del Periodo: ${etiquetaPeriodo(selectedPeriodoStr)}` : `Reporte ${currentDashboardNombre ?? ''}`}
             </h3>
-            <p className="text-[11px] text-gray-400">Visualización interactiva y documentos adjuntos del periodo.</p>
+            <p className="text-[11px] text-gray-400">
+              {periodos.length > 0 ? 'Visualización interactiva y documentos adjuntos del periodo.' : 'Visualización interactiva del reporte.'}
+            </p>
           </div>
         </div>
 
@@ -152,15 +162,17 @@ function PeriodosContent() {
           <div className="flex flex-col items-center justify-center py-24">
             <p className="text-[#1B4589] text-xs font-bold animate-pulse">Cargando reporte interactivo...</p>
           </div>
-        ) : periodoActual?.urlPowerbi ? (
-          <VisorReporte src={periodoActual.urlPowerbi} titulo={`Reporte ${currentDashboardNombre ?? ''}`} />
+        ) : urlReporte ? (
+          <VisorReporte src={urlReporte} titulo={`Reporte ${currentDashboardNombre ?? ''}`} />
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 bg-[#E8ECF3] rounded-full flex items-center justify-center text-2xl mb-2 text-[#1B4589]">
               📊
             </div>
-            <p className="text-xs font-semibold text-[#231F20]">No hay un enlace de PowerBI disponible para este periodo.</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Seleccione otro periodo en la barra superior.</p>
+            <p className="text-xs font-semibold text-[#231F20]">
+              {dashboardActual ? 'Este reporte todavía no tiene un enlace de Power BI disponible.' : 'No hay reportes disponibles para tu empresa.'}
+            </p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Comunícate con Informa Perú si crees que es un error.</p>
           </div>
         )}
       </div>
