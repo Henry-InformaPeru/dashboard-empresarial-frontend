@@ -158,7 +158,7 @@ function PeriodosContent() {
           </div>
         </div>
 
-        {loadingPeriodos ? (
+        {loadingPeriodos && !urlReporte ? (
           <div className="flex flex-col items-center justify-center py-24">
             <p className="text-[#1B4589] text-xs font-bold animate-pulse">Cargando reporte interactivo...</p>
           </div>
