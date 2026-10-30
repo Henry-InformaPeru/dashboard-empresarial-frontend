@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { limpiarSesionYRedirigir } from '@/shared/lib/auth';
 
 export function Header({ onMenu }: { onMenu?: () => void }) {
-  const router = useRouter();
   const [usuario, setUsuario] = useState<{ username?: string; nombreCompleto?: string } | null>(null);
 
   useEffect(() => {
@@ -19,9 +18,7 @@ export function Header({ onMenu }: { onMenu?: () => void }) {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/');
+    limpiarSesionYRedirigir('/');
   };
 
   return (

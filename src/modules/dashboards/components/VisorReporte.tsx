@@ -16,8 +16,6 @@ export function VisorReporte({ src, titulo }: { src: string; titulo: string }) {
   const [completa, setCompleta] = useState(false);
   const [reservado, setReservado] = useState(0); // alto que deja libre el visor mientras está en pantalla completa
   const [caja, setCaja] = useState<{ ancho: number; alto: number } | null>(null);
-  // Tamaño con el que se cargó el reporte: Power BI lo ajusta al tamaño que tiene al cargar y NO se reajusta solo
-  const [cargadoCon, setCargadoCon] = useState<{ ancho: number; alto: number } | null>(null);
   const [cargando, setCargando] = useState(true);
 
   // Mide el espacio disponible y calcula el reporte más grande con su forma (16:9 + barra) que cabe en él
@@ -52,21 +50,10 @@ export function VisorReporte({ src, titulo }: { src: string; titulo: string }) {
     };
   }, [calcular]);
 
-  // Cuando el tamaño cambia de verdad (pantalla completa, girar el celular, ocultar el menú…), el reporte se vuelve a
-  // cargar con el tamaño nuevo para que Power BI lo ajuste: se ve entero y centrado en vez de cortado y pegado arriba.
-  const cambioTamano = (a: { ancho: number; alto: number } | null, b: { ancho: number; alto: number } | null) =>
-    !!a && !!b && (Math.abs(a.ancho - b.ancho) > 12 || Math.abs(a.alto - b.alto) > 12);
+  // Si cambia la URL del reporte (por ejemplo al elegir otro dashboard), mostramos el indicador de carga
   useEffect(() => {
-    if (!caja) return;
-    if (cargadoCon && !cambioTamano(caja, cargadoCon)) return;
-    const espera = cargadoCon ? 400 : 0; // al cambiar se espera a que el tamaño se estabilice
-    const temporizador = setTimeout(() => {
-      setCargadoCon(caja);
-      setCargando(true);
-    }, espera);
-    return () => clearTimeout(temporizador);
-  }, [caja, cargadoCon]);
-  const ajustando = cambioTamano(caja, cargadoCon);
+    setCargando(true);
+  }, [src]);
 
   // Al abrir el reporte desde el inicio de la página, se baja hasta el visor para ver los indicadores enseguida
   useEffect(() => {
@@ -163,18 +150,15 @@ export function VisorReporte({ src, titulo }: { src: string; titulo: string }) {
           }`}
           style={caja ? { width: caja.ancho, height: caja.alto } : { width: '100%', height: '60dvh' }}
         >
-          {cargadoCon && (
-            <iframe
-              key={`${cargadoCon.ancho}x${cargadoCon.alto}`}
-              title={titulo}
-              src={src}
-              className="w-full h-full border-0"
-              allow="fullscreen"
-              allowFullScreen
-              onLoad={() => setCargando(false)}
-            />
-          )}
-          {(cargando || ajustando || !cargadoCon) && (
+          <iframe
+            title={titulo}
+            src={src}
+            className="w-full h-full border-0"
+            allow="fullscreen"
+            allowFullScreen
+            onLoad={() => setCargando(false)}
+          />
+          {cargando && (
             <div className="absolute inset-0 bg-white flex items-center justify-center text-xs font-bold text-[#1B4589] animate-pulse">
               Cargando reporte...
             </div>

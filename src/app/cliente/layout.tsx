@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/shared/components/layout/AppShell';
+import { isTokenExpired, limpiarSesionYRedirigir } from '@/shared/lib/auth';
 
 export default function ClienteLayout({
   children,
@@ -13,28 +14,48 @@ export default function ClienteLayout({
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
+    const verificarSesion = () => {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
 
-    if (!token) {
-      router.push('/');
-      return;
-    }
-
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        // Si fuera admin intentando entrar a /cliente, lo redirigimos a su sección
-        if (user.rolId === 1) {
-          router.push('/admin/empresas');
-          return;
-        }
-      } catch (e) {
-        console.error('Error al parsear usuario', e);
+      if (!token || isTokenExpired(token)) {
+        limpiarSesionYRedirigir('/');
+        return false;
       }
-    }
 
-    setAuthorized(true);
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          // Si fuera admin intentando entrar a /cliente, lo redirigimos a su sección
+          if (user.rolId === 1) {
+            router.push('/admin/empresas');
+            return false;
+          }
+        } catch (e) {
+          console.error('Error al parsear usuario', e);
+        }
+      }
+
+      setAuthorized(true);
+      return true;
+    };
+
+    verificarSesion();
+
+    // Si el usuario regresa a la pestaña tras dejarla inactiva, verificar que no haya expirado
+    const alReactivar = () => {
+      if (document.visibilityState === 'visible') {
+        verificarSesion();
+      }
+    };
+
+    document.addEventListener('visibilitychange', alReactivar);
+    window.addEventListener('focus', alReactivar);
+
+    return () => {
+      document.removeEventListener('visibilitychange', alReactivar);
+      window.removeEventListener('focus', alReactivar);
+    };
   }, [router]);
 
   if (!authorized) {
