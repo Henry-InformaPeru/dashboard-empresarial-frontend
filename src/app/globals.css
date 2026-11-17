@@ -28,10 +28,54 @@
   --font-sans: 'Leelawadee UI', 'Segoe UI', Arial, sans-serif;
 }
 
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scrollbar-gutter: stable;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--informa-blue-10);
   color: var(--informa-black);
   margin: 0;
   padding: 0;
+}
+
+/* =========================================================================
+   NORMALIZACIÓN MULTI-NAVEGADOR (Chrome, Edge, Firefox, Safari)
+   ========================================================================= */
+
+/* 1. Estandarización de Selects: elimina flechas nativas feas de Firefox/Safari y unifica el chevron */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23475569' stroke-width='2.2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 0.85em 0.85em;
+  padding-right: 1.6rem !important;
+}
+
+/* 2. Fix para celdas sticky en tablas (evita parpadeo o bordes fantasma en Firefox) */
+th, td {
+  background-clip: padding-box;
+}
+
+/* 3. Animaciones globales suaves */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

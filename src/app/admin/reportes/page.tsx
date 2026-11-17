@@ -6,6 +6,7 @@ import { empresaService, EmpresaDto } from '@/modules/empresas/services/empresaS
 import { VisorReporte } from '@/modules/dashboards/components/VisorReporte';
 import { SelectorPeriodo } from '@/modules/dashboards/components/SelectorPeriodo';
 import { BotonDescarga } from '@/modules/dashboards/components/BotonDescarga';
+import { CustomSelect } from '@/shared/components/ui/CustomSelect';
 
 interface DashboardEmpresaDto {
   id: number;
@@ -163,39 +164,34 @@ export default function AdminReportesPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 w-full lg:w-auto">
-          <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 w-full sm:w-auto">
-            <span className="text-[11px] font-bold text-[#1B4589] uppercase tracking-wider">EMPRESA:</span>
-            <select
-              value={empresaId ?? ''}
-              onChange={(e) => elegirEmpresa(e.target.value ? Number(e.target.value) : null)}
-              disabled={loadingEmpresas}
-              className="flex-1 min-w-0 px-2 py-2 sm:py-1 border border-gray-300 rounded text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold sm:max-w-[220px]"
-            >
-              <option value="">{loadingEmpresas ? 'Cargando...' : 'Selecciona una empresa'}</option>
-              {empresas.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.nombre}
-                  {e.estado !== 'ACTIVO' ? ' (inactiva)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CustomSelect
+            value={empresaId ? String(empresaId) : ''}
+            placeholder={loadingEmpresas ? 'Cargando empresas...' : 'Selecciona una empresa'}
+            options={empresas.map((e) => ({
+              value: String(e.id),
+              label: e.nombre,
+              sublabel: e.estado !== 'ACTIVO' ? 'Inactiva' : undefined,
+            }))}
+            onChange={(val) => elegirEmpresa(val ? Number(val) : null)}
+            prefix="EMPRESA:"
+            disabled={loadingEmpresas}
+            ariaLabel="Seleccionar Empresa"
+            size="md"
+          />
 
           {dashboards.length > 1 && (
-            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 w-full sm:w-auto">
-              <span className="text-[11px] font-bold text-[#1B4589] uppercase tracking-wider">DASHBOARD:</span>
-              <select
-                value={dashboardId ?? ''}
-                onChange={(e) => elegirDashboard(Number(e.target.value))}
-                className="flex-1 min-w-0 px-2 py-2 sm:py-1 border border-gray-300 rounded text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold sm:max-w-[220px]"
-              >
-                {dashboards.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {quitarPrefijo(d.nombre)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <CustomSelect
+              value={dashboardId ? String(dashboardId) : ''}
+              placeholder="Seleccionar Dashboard"
+              options={dashboards.map((d) => ({
+                value: String(d.id),
+                label: quitarPrefijo(d.nombre),
+              }))}
+              onChange={(val) => elegirDashboard(Number(val))}
+              prefix="DASHBOARD:"
+              ariaLabel="Seleccionar Dashboard"
+              size="md"
+            />
           )}
 
           {empresaId !== null && (loadingDashboards || loadingPeriodos || periodos.length > 0) && (

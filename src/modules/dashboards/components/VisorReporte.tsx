@@ -52,7 +52,7 @@ export function VisorReporte({ src, titulo }: { src: string; titulo: string }) {
 
   // Si cambia la URL del reporte (por ejemplo al elegir otro dashboard), mostramos el indicador de carga
   useEffect(() => {
-    setCargando(true);
+    Promise.resolve().then(() => setCargando(true));
   }, [src]);
 
   // Al abrir el reporte desde el inicio de la página, se baja hasta el visor para ver los indicadores enseguida

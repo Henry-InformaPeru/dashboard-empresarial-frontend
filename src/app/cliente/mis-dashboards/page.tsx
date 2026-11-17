@@ -9,25 +9,27 @@ export default function MisDashboardsPage() {
   const [dashboards, setDashboards] = useState<DashboardResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [usuario, setUsuario] = useState<{ nombreCompleto?: string; empresaId?: number } | null>(null);
+  const [usuario] = useState<{ nombreCompleto?: string; empresaId?: number } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr);
+    } catch (e) {
+      console.error('Error parsing user', e);
+      return null;
+    }
+  });
 
   useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        setUsuario(JSON.parse(userStr));
-      } catch (e) {
-        console.error('Error parsing user', e);
-      }
-    }
-
     const fetchDashboards = async () => {
       try {
         const data = await dashboardService.getMisDashboards();
         setDashboards(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error al cargar dashboards:', err);
-        if (err.response?.status === 403) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 403) {
           setError('No tienes permisos o no cuentas con una empresa asignada.');
         } else {
           setError('Ocurrió un error al cargar los dashboards de tu empresa.');

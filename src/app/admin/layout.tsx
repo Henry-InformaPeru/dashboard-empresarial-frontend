@@ -28,7 +28,7 @@ export default function AdminLayout({
           const user = JSON.parse(userStr);
           // Si no es administrador (rolId 1), lo redirigimos a su portal
           if (user.rolId !== 1) {
-            router.push('/cliente/periodos');
+            router.push('/cliente/portfolio');
             return false;
           }
         } catch (e) {

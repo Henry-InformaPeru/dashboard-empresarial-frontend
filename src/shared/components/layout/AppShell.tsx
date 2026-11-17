@@ -1,37 +1,10 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Footer } from './Footer';
 
-// Preferencia «menú oculto» en escritorio: se recuerda en este navegador
-const CLAVE_MENU_OCULTO = 'menu-oculto';
-const oyentes = new Set<() => void>();
-const suscribir = (aviso: () => void) => {
-  oyentes.add(aviso);
-  return () => {
-    oyentes.delete(aviso);
-  };
-};
-const leerMenuOculto = () => {
-  try {
-    return localStorage.getItem(CLAVE_MENU_OCULTO) === '1';
-  } catch {
-    return false;
-  }
-};
-const guardarMenuOculto = (oculto: boolean) => {
-  try {
-    localStorage.setItem(CLAVE_MENU_OCULTO, oculto ? '1' : '0');
-  } catch {
-    /* sin almacenamiento: queda solo para esta visita */
-  }
-  oyentes.forEach((aviso) => aviso());
-};
-
-// Estructura común de las pantallas con sesión: menú lateral, cabecera, contenido y pie.
-// En celular y tablet el menú es un cajón; en escritorio se puede ocultar para dar más espacio al reporte.
 export function AppShell({
   children,
   conFooter = true,
@@ -40,14 +13,27 @@ export function AppShell({
   conFooter?: boolean;
 }) {
   const [menuAbierto, setMenuAbierto] = useState(false);
-  const menuOculto = useSyncExternalStore(suscribir, leerMenuOculto, () => false);
+  const [colapsado, setColapsado] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const guardado = localStorage.getItem('sidebar-colapsado');
+      return guardado === '1';
+    } catch {
+      return false;
+    }
+  });
 
-  // El botón ☰ abre el cajón en celular y oculta o muestra el menú en escritorio
   const alternarMenu = () => {
-    if (window.matchMedia('(min-width: 1024px)').matches) {
-      guardarMenuOculto(!leerMenuOculto());
+    if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) {
+      setColapsado((prev) => {
+        const nuevo = !prev;
+        try {
+          localStorage.setItem('sidebar-colapsado', nuevo ? '1' : '0');
+        } catch {}
+        return nuevo;
+      });
     } else {
-      setMenuAbierto(true);
+      setMenuAbierto((prev) => !prev);
     }
   };
 
@@ -67,11 +53,20 @@ export function AppShell({
   }, [menuAbierto]);
 
   return (
-    <div className="flex min-h-dvh bg-[#E8ECF3]">
-      <Sidebar abierto={menuAbierto} oculto={menuOculto} onCerrar={() => setMenuAbierto(false)} />
+    <div className="flex min-h-dvh bg-[#F1F5F9]">
+      <Suspense fallback={<div className="w-14 h-screen sticky top-0 bg-[#0B192C] shrink-0" />}>
+        <Sidebar
+          abierto={menuAbierto}
+          colapsado={colapsado}
+          onCerrar={() => setMenuAbierto(false)}
+        />
+      </Suspense>
+
       <div className="flex-1 flex flex-col min-w-0">
         <Header onMenu={alternarMenu} />
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto">{children}</main>
+        <main className="flex-1 flex flex-col p-2 sm:p-3 lg:p-3.5 xl:p-4 pb-2 overflow-y-auto max-w-full overflow-x-hidden">
+          {children}
+        </main>
         {conFooter && <Footer />}
       </div>
     </div>

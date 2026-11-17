@@ -25,12 +25,8 @@ export default function ClienteLayout({
 
       if (userStr) {
         try {
-          const user = JSON.parse(userStr);
-          // Si fuera admin intentando entrar a /cliente, lo redirigimos a su sección
-          if (user.rolId === 1) {
-            router.push('/admin/empresas');
-            return false;
-          }
+          JSON.parse(userStr);
+          // Tanto clientes como administradores están autorizados para acceder a los módulos de portfolio
         } catch (e) {
           console.error('Error al parsear usuario', e);
         }

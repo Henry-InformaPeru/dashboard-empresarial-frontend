@@ -7,6 +7,7 @@ import { periodoService, PeriodoResponseDto } from '@/modules/dashboards/service
 import { VisorReporte } from '@/modules/dashboards/components/VisorReporte';
 import { SelectorPeriodo, etiquetaPeriodo } from '@/modules/dashboards/components/SelectorPeriodo';
 import { BotonDescarga } from '@/modules/dashboards/components/BotonDescarga';
+import { CustomSelect } from '@/shared/components/ui/CustomSelect';
 
 function PeriodosContent() {
   const searchParams = useSearchParams();
@@ -30,10 +31,10 @@ function PeriodosContent() {
       try {
         const data = await dashboardService.getMisDashboards();
         setDashboards(data);
-        if (data.length > 0 && !selectedDashboardId) {
-          setSelectedDashboardId(data[0].id);
+        if (data.length > 0) {
+          setSelectedDashboardId((prev) => prev ?? data[0].id);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error al cargar dashboards:', err);
         setError('No se pudieron cargar los dashboards de la empresa.');
       } finally {
@@ -62,7 +63,7 @@ function PeriodosContent() {
         if (data.length > 0) {
           setSelectedPeriodoStr(data[0].periodo);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error al cargar periodos:', err);
         setError('No se pudieron cargar los periodos de este reporte o no tienes acceso.');
       } finally {
@@ -101,20 +102,17 @@ function PeriodosContent() {
         {!loadingDashboards && dashboards.length > 0 && (
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
             {dashboards.length > 1 ? (
-              <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 w-full md:w-auto">
-                <span className="text-[11px] font-bold text-[#1B4589] uppercase tracking-wider">DASHBOARD:</span>
-                <select
-                  value={selectedDashboardId || ''}
-                  onChange={(e) => setSelectedDashboardId(Number(e.target.value))}
-                  className="flex-1 min-w-0 px-2 py-2 sm:py-1 border border-gray-300 rounded text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold"
-                >
-                  {dashboards.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.nombre.replace(/^Dashboard\s+/i, '')}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CustomSelect
+                value={selectedDashboardId ? String(selectedDashboardId) : ''}
+                options={dashboards.map((d) => ({
+                  value: String(d.id),
+                  label: d.nombre.replace(/^Dashboard\s+/i, ''),
+                }))}
+                onChange={(val) => setSelectedDashboardId(Number(val))}
+                prefix="DASHBOARD:"
+                ariaLabel="Seleccionar Dashboard"
+                size="md"
+              />
             ) : (
               <div className="bg-blue-50/80 border border-blue-100 px-3 py-1.5 rounded-lg flex items-center gap-2">
                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">REPORTE:</span>

@@ -1,5 +1,7 @@
 'use client';
 
+import { CustomSelect } from '@/shared/components/ui/CustomSelect';
+
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -19,36 +21,26 @@ interface SelectorPeriodoProps {
   cargando?: boolean;
 }
 
-// Listado desplegable de periodos (con los años agrupados cuando hay más de uno)
+// Listado desplegable de periodos estandarizado con CustomSelect
 export function SelectorPeriodo({ periodos, valor, onCambiar, cargando = false }: SelectorPeriodoProps) {
-  const anios = Array.from(new Set(periodos.map((p) => p.periodo.substring(0, 4)))).sort().reverse();
-  const opcion = (p: { id: number; periodo: string }) => (
-    <option key={p.id} value={p.periodo}>
-      {etiquetaPeriodo(p.periodo)}
-    </option>
-  );
+  const options = periodos.map((p) => ({
+    value: p.periodo,
+    label: etiquetaPeriodo(p.periodo),
+    sublabel: `Corte mensual ${p.periodo}`,
+  }));
 
   return (
-    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 w-full md:w-auto">
-      <label htmlFor="selector-periodo" className="text-[11px] font-bold text-[#1B4589] uppercase tracking-wider shrink-0">
-        PERIODO:
-      </label>
-      <select
-        id="selector-periodo"
+    <div className="flex items-center w-full md:w-auto">
+      <CustomSelect
         value={valor ?? ''}
-        onChange={(e) => onCambiar(e.target.value)}
+        placeholder={cargando ? 'Cargando...' : periodos.length === 0 ? 'Sin periodos' : 'Seleccionar periodo'}
+        options={options}
+        onChange={onCambiar}
+        prefix="PERIODO:"
         disabled={cargando || periodos.length === 0}
-        className="flex-1 min-w-0 px-2 py-2 sm:py-1 border border-gray-300 rounded text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold sm:min-w-[170px] disabled:opacity-60"
-      >
-        {periodos.length === 0 && <option value="">{cargando ? 'Cargando...' : 'Sin periodos'}</option>}
-        {anios.length > 1
-          ? anios.map((anio) => (
-              <optgroup key={anio} label={anio}>
-                {periodos.filter((p) => p.periodo.startsWith(anio)).map(opcion)}
-              </optgroup>
-            ))
-          : periodos.map(opcion)}
-      </select>
+        ariaLabel="Selector de Periodo"
+        size="md"
+      />
     </div>
   );
 }

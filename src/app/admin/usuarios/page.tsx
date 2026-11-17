@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { httpClient } from '@/shared/lib/httpClient';
 import { CampoClave } from '@/modules/usuarios/components/CampoClave';
 import { claveValida } from '@/modules/usuarios/lib/clave';
+import { CustomSelect } from '@/shared/components/ui/CustomSelect';
 
 interface UsuarioDto {
   id: number;
@@ -56,6 +57,7 @@ export default function AdminUsuariosPage() {
 
   // Buscador y Paginación
   const [searchTerm, setSearchTerm] = useState('');
+  const [filtroEmpresaId, setFiltroEmpresaId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
@@ -123,6 +125,7 @@ export default function AdminUsuariosPage() {
   // Cargar usuarios y empresas ordenados del más reciente al más antiguo
   // (la primera vez «loading» ya parte en true; las recargas después de una acción son silenciosas)
   const fetchData = async () => {
+    await Promise.resolve();
     try {
       const [resUsuarios, resEmpresas] = await Promise.all([
         httpClient.get<{ usuarios: UsuarioDto[] }>('/usuarios'),
@@ -142,16 +145,23 @@ export default function AdminUsuariosPage() {
   };
 
   useEffect(() => {
-    fetchData();
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) fetchData();
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // Filtrado de usuarios por término de búsqueda
+  // Filtrado de usuarios por término de búsqueda y empresa
   const usuariosFiltrados = usuarios.filter((u) => {
     const term = searchTerm.toLowerCase();
     const matchUsername = u.username.toLowerCase().includes(term);
     const matchNombre = u.nombreCompleto?.toLowerCase().includes(term) ?? false;
     const matchEmail = u.email?.toLowerCase().includes(term) ?? false;
-    return matchUsername || matchNombre || matchEmail;
+    const matchEmpresa = filtroEmpresaId ? u.empresaId === filtroEmpresaId : true;
+    return (matchUsername || matchNombre || matchEmail) && matchEmpresa;
   });
 
   // Lógica de Paginación
@@ -251,58 +261,205 @@ export default function AdminUsuariosPage() {
   const acciones = (u: UsuarioDto, enTarjeta: boolean) => {
     const isActive = u.estado?.toUpperCase() === 'ACTIVO';
     const esMiCuenta = miId !== null && u.id === miId;
-    const base = enTarjeta
-      ? 'w-full min-h-[44px] rounded-lg font-bold text-xs transition-all border'
-      : 'px-3 py-1.5 rounded-lg font-bold text-[11px] transition-all border';
+
+    if (enTarjeta) {
+      return (
+        <div className="grid grid-cols-1 gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => abrirCambiarClave(u)}
+            className="w-full min-h-[40px] px-3 py-2 bg-blue-50 text-[#1B4589] hover:bg-blue-100 font-bold text-xs rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            <span>Cambiar clave</span>
+          </button>
+
+          {esMiCuenta ? (
+            <div className="text-center py-2 px-3 bg-slate-100 text-slate-500 font-semibold text-xs rounded-lg border border-slate-200 flex items-center justify-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>Tu sesión actual</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleCambiarEstado(u.id, u.estado)}
+                className={`min-h-[40px] px-3 py-2 font-bold text-xs rounded-lg border transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
+                  isActive
+                    ? 'bg-amber-50 text-amber-800 hover:bg-amber-100 border-amber-200'
+                    : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border-emerald-200'
+                }`}
+              >
+                <span>{isActive ? 'Desactivar' : 'Activar'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => abrirEliminar(u)}
+                className="min-h-[40px] px-3 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs rounded-lg border border-rose-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Eliminar</span>
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
 
     return (
-      <>
+      <div className="flex items-center justify-end gap-2">
         <button
+          type="button"
           onClick={() => abrirCambiarClave(u)}
-          className={`${base} bg-blue-50 text-[#1B4589] hover:bg-blue-100 border-blue-200`}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-[#1B4589] bg-blue-50/80 border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer shadow-2xs"
+          title="Cambiar contraseña de este usuario"
         >
-          🔑 Cambiar clave
+          <svg className="w-3.5 h-3.5 text-[#1B4589]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          <span>Cambiar clave</span>
         </button>
+
         {esMiCuenta ? (
-          <span className={`${enTarjeta ? 'block text-center py-2' : 'px-2'} text-[11px] font-semibold text-gray-400`}>
-            Tu cuenta
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-500 bg-slate-100 border border-slate-200" title="Sesión activa con la que estás conectado">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>Tu sesión actual</span>
           </span>
         ) : (
           <>
             <button
+              type="button"
               onClick={() => handleCambiarEstado(u.id, u.estado)}
-              className={`${base} ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer border shadow-2xs ${
                 isActive
-                  ? 'bg-yellow-50 text-yellow-800 hover:bg-yellow-100 border-yellow-200'
-                  : 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200'
+                  ? 'text-amber-800 bg-amber-50/80 border-amber-200 hover:bg-amber-100'
+                  : 'text-emerald-800 bg-emerald-50/80 border-emerald-200 hover:bg-emerald-100'
               }`}
+              title={isActive ? 'Desactivar acceso' : 'Activar acceso'}
             >
-              {isActive ? 'Desactivar' : 'Activar'}
+              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+              <span>{isActive ? 'Desactivar' : 'Activar'}</span>
             </button>
+
             <button
+              type="button"
               onClick={() => abrirEliminar(u)}
-              className={`${base} bg-red-50 text-[#ED1C24] hover:bg-red-100 border-red-200`}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50/80 border border-rose-200 hover:bg-rose-100 transition-colors cursor-pointer shadow-2xs"
+              title="Eliminar usuario"
             >
-              🗑 Eliminar
+              <svg className="w-3.5 h-3.5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>Eliminar</span>
             </button>
           </>
         )}
-      </>
+      </div>
     );
   };
 
+  const totalActivos = usuarios.filter((u) => u.estado?.toUpperCase() === 'ACTIVO').length;
+  const totalClientes = usuarios.filter((u) => u.rolId === 2).length;
+  const totalAdmins = usuarios.filter((u) => u.rolId === 1).length;
+
   return (
-    <div className="space-y-6">
-      {/* Cabecera */}
-      <div className="bg-white px-4 sm:px-6 py-4 sm:py-5 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="space-y-4">
+      {/* 3 KPI Cards Ejecutivas de Usuarios */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <div className="bg-white p-4 sm:p-5 rounded-xl shadow-2xs border border-slate-200/90 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#1B4589] flex items-center justify-center text-2xl shrink-0 shadow-2xs">
+            👥
+          </div>
+          <div className="min-w-0">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block truncate">
+              Total de Usuarios
+            </span>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <span className="text-2xl font-black text-[#1B4589]">
+                {usuarios.length}
+              </span>
+              <span className="text-xs font-semibold text-emerald-600">
+                {totalActivos} activos
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 sm:p-5 rounded-xl shadow-2xs border border-slate-200/90 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl shrink-0 shadow-2xs">
+            🏢
+          </div>
+          <div className="min-w-0">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block truncate">
+              Usuarios Clientes
+            </span>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <span className="text-2xl font-black text-slate-900">
+                {totalClientes}
+              </span>
+              <span className="text-xs font-semibold text-slate-500">
+                Asignados a empresas
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 sm:p-5 rounded-xl shadow-2xs border border-slate-200/90 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl shrink-0 shadow-2xs">
+            🛡️
+          </div>
+          <div className="min-w-0">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block truncate">
+              Administradores
+            </span>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <span className="text-2xl font-black text-slate-900">
+                {totalAdmins}
+              </span>
+              <span className="text-xs font-semibold text-indigo-600">
+                Acceso global Sulotec
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Cabecera y Filtros */}
+      <div className="bg-white px-4 sm:px-6 py-3.5 rounded-xl shadow-2xs border border-slate-200/90 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-[#1B4589]">Gestión de Usuarios</h2>
-          <p className="text-gray-500 text-xs mt-0.5">
-            Crea cuentas, cambia contraseñas, activa, desactiva o elimina usuarios (clientes y administradores).
+          <h2 className="text-lg sm:text-xl font-black text-[#1B4589] tracking-tight">Gestión de Usuarios</h2>
+          <p className="text-slate-500 text-xs mt-0.5">
+            Crea cuentas, administra contraseñas y asigna usuarios a sus empresas correspondientes.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full md:w-auto">
+          {/* Selector de Empresa */}
+          {empresas.length > 0 && (
+            <CustomSelect
+              value={filtroEmpresaId ? String(filtroEmpresaId) : ''}
+              options={[
+                { value: '', label: 'Todas las Empresas', sublabel: 'Ver todos los usuarios' },
+                ...empresas.map((emp) => ({
+                  value: String(emp.id),
+                  label: emp.nombre,
+                  sublabel: emp.ruc ? `RUC: ${emp.ruc}` : undefined,
+                })),
+              ]}
+              onChange={(val) => {
+                setFiltroEmpresaId(val ? Number(val) : null);
+                setCurrentPage(1);
+              }}
+              prefix="EMPRESA:"
+              ariaLabel="Filtrar por Empresa"
+              size="md"
+            />
+          )}
+
           <input
             type="text"
             placeholder="Buscar por usuario, nombre o email..."
@@ -311,7 +468,7 @@ export default function AdminUsuariosPage() {
               setSearchTerm(e.target.value);
               setCurrentPage(1); // al buscar se vuelve a la primera hoja
             }}
-            className="w-full md:w-64 px-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-gray-50/50"
+            className="w-full md:w-56 px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-[#1B4589] focus:outline-hidden bg-slate-50"
           />
 
           <button
@@ -320,21 +477,21 @@ export default function AdminUsuariosPage() {
               setSuccessMsg('');
               setShowModal(true);
             }}
-            className="w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-sm whitespace-nowrap"
+            className="w-full sm:w-auto px-4 py-2 bg-[#1B4589] hover:bg-[#143468] text-white font-bold text-xs rounded-lg transition-all shadow-2xs whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5"
           >
-            + Nuevo Usuario
+            <span>+ Nuevo Usuario</span>
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-[#ED1C24] text-xs font-medium">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-[#ED1C24] text-xs font-medium shrink-0">
           ⚠️ {error}
         </div>
       )}
 
       {successMsg && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-xs font-medium">
+        <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-xs font-medium shrink-0">
           ✅ {successMsg}
         </div>
       )}
@@ -363,32 +520,33 @@ export default function AdminUsuariosPage() {
             <form onSubmit={handleCrearUsuario} className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-[#231F20] mb-1">Rol de Usuario</label>
-                <select
-                  value={rolId}
-                  onChange={(e) => setRolId(Number(e.target.value))}
-                  className={`${claseInput} font-bold`}
-                >
-                  <option value={2}>Cliente (Empresa)</option>
-                  <option value={1}>Administrador Global</option>
-                </select>
+                <CustomSelect
+                  value={String(rolId)}
+                  options={[
+                    { value: '2', label: 'Cliente (Empresa)', sublabel: 'Acceso a dashboards de cartera' },
+                    { value: '1', label: 'Administrador Global', sublabel: 'Control total de plataforma' },
+                  ]}
+                  onChange={(val) => setRolId(Number(val))}
+                  size="md"
+                  className="w-full"
+                />
               </div>
 
               {rolId === 2 && (
                 <div>
                   <label className="block text-xs font-medium text-[#231F20] mb-1">Empresa Asociada</label>
-                  <select
-                    value={empresaId || ''}
-                    onChange={(e) => setEmpresaId(Number(e.target.value))}
-                    required
-                    className={`${claseInput} font-bold`}
-                  >
-                    <option value="">Seleccione una empresa...</option>
-                    {empresas.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.nombre} {emp.ruc ? `(RUC: ${emp.ruc})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    value={empresaId ? String(empresaId) : ''}
+                    placeholder="Seleccione una empresa..."
+                    options={empresas.map((emp) => ({
+                      value: String(emp.id),
+                      label: emp.nombre,
+                      sublabel: emp.ruc ? `RUC: ${emp.ruc}` : undefined,
+                    }))}
+                    onChange={(val) => setEmpresaId(val ? Number(val) : null)}
+                    size="md"
+                    className="w-full"
+                  />
                 </div>
               )}
 
@@ -509,12 +667,11 @@ export default function AdminUsuariosPage() {
             </div>
 
             <p className="text-sm text-[#231F20]">
-              ¿Eliminar a <strong className="font-mono text-[#1B4589]">{usuarioEliminar.username}</strong>
+              ¿Dar de baja al usuario <strong className="font-mono text-[#1B4589]">{usuarioEliminar.username}</strong>
               {usuarioEliminar.nombreCompleto ? ` (${usuarioEliminar.nombreCompleto})` : ''}?
             </p>
-            <p className="text-xs text-gray-600">
-              Esta acción <strong>no se puede deshacer</strong>. Si solo quieres que no pueda entrar por ahora, usa
-              «Desactivar».
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Esta acción es un <strong>borrado lógico</strong>: el usuario perderá el acceso a la plataforma de forma inmediata, conservando todos sus registros en base de datos para fines de auditoría histórica.
             </p>
 
             {errorModal && (
@@ -541,9 +698,12 @@ export default function AdminUsuariosPage() {
       )}
 
       {/* Lista de usuarios */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between">
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-          <h3 className="font-bold text-sm text-[#1B4589]">Usuarios Registrados ({usuariosFiltrados.length})</h3>
+      <div className="bg-white rounded-xl shadow-2xs border border-slate-200/90 overflow-hidden">
+        <div className="px-4 sm:px-6 py-3.5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+          <h3 className="font-bold text-xs sm:text-sm text-[#1B4589]">Usuarios Registrados ({usuariosFiltrados.length})</h3>
+          <span className="text-[11px] font-semibold text-slate-500">
+            {totalActivos} activos
+          </span>
         </div>
 
         {loading ? (
@@ -570,11 +730,11 @@ export default function AdminUsuariosPage() {
                     const isCliente = u.rolId === 2;
                     return (
                       <tr key={u.id} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="py-4 px-6">
+                        <td className="py-3.5 px-6">
                           <div className="font-bold font-mono text-[#1B4589]">{u.username}</div>
                           <div className="text-gray-400 text-[11px]">{u.nombreCompleto || u.email || 'Sin datos adicionales'}</div>
                         </td>
-                        <td className="py-4 px-6">
+                        <td className="py-3.5 px-6">
                           <span
                             className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${
                               isCliente ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
@@ -583,8 +743,8 @@ export default function AdminUsuariosPage() {
                             {isCliente ? 'CLIENTE' : 'ADMINISTRADOR'}
                           </span>
                         </td>
-                        <td className="py-4 px-6 font-semibold text-gray-700">{obtenerNombreEmpresa(u.empresaId)}</td>
-                        <td className="py-4 px-6">
+                        <td className="py-3.5 px-6 font-semibold text-gray-700">{obtenerNombreEmpresa(u.empresaId)}</td>
+                        <td className="py-3.5 px-6">
                           <span
                             className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold ${
                               isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -593,8 +753,8 @@ export default function AdminUsuariosPage() {
                             {u.estado}
                           </span>
                         </td>
-                        <td className="py-4 px-6">
-                          <div className="flex flex-wrap items-center justify-end gap-2">{acciones(u, false)}</div>
+                        <td className="py-3.5 px-6 text-right">
+                          {acciones(u, false)}
                         </td>
                       </tr>
                     );
@@ -635,14 +795,14 @@ export default function AdminUsuariosPage() {
                       </span>
                       <span className="font-semibold text-gray-700 break-words">{obtenerNombreEmpresa(u.empresaId)}</span>
                     </div>
-                    <div className="grid grid-cols-1 gap-2">{acciones(u, true)}</div>
+                    {acciones(u, true)}
                   </div>
                 );
               })}
             </div>
 
             {/* Paginador Inferior */}
-            <div className="px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between gap-2">
+            <div className="px-4 sm:px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2">
               <span className="text-xs text-gray-500">
                 Página <strong className="text-[#1B4589]">{currentPage}</strong> de{' '}
                 <strong className="text-[#1B4589]">{totalPages}</strong>

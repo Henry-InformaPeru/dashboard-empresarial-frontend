@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { httpClient } from '@/shared/lib/httpClient';
 import { extraerEnlacePowerBi, periodoSiguiente, validarEnlaceDescarga } from '@/modules/dashboards/lib/enlaces';
+import { CustomSelect } from '@/shared/components/ui/CustomSelect';
 
 interface EmpresaDto {
   id: number;
@@ -249,20 +250,17 @@ export default function AdminEmpresaPeriodosPage() {
           {loadingEmpresa ? 'Cargando...' : empresa?.nombre || 'Empresa No Encontrada'} {empresa?.ruc ? `(RUC: ${empresa.ruc})` : ''}
         </span>
         {dashboards.length > 1 && (
-          <>
-            <span className="text-xs font-bold text-[#1B4589] uppercase tracking-wider sm:ml-2">REPORTE:</span>
-            <select
-              value={selectedDashboardId ?? ''}
-              onChange={(e) => setSelectedDashboardId(Number(e.target.value))}
-              className="px-2 py-2 sm:py-1 border border-gray-300 rounded text-base sm:text-xs text-[#231F20] focus:ring-2 focus:ring-[#1B4589] focus:outline-none bg-white font-semibold"
-            >
-              {dashboards.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {quitarPrefijo(d.nombre)}
-                </option>
-              ))}
-            </select>
-          </>
+          <CustomSelect
+            value={selectedDashboardId ? String(selectedDashboardId) : ''}
+            options={dashboards.map((d) => ({
+              value: String(d.id),
+              label: quitarPrefijo(d.nombre),
+            }))}
+            onChange={(val) => setSelectedDashboardId(Number(val))}
+            prefix="REPORTE:"
+            ariaLabel="Seleccionar Reporte"
+            size="md"
+          />
         )}
       </div>
 
