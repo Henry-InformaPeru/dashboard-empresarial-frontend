@@ -219,7 +219,7 @@ export function PadronClientes({
   const hayFiltrosActivos = estrategia !== 0 || departamento !== 'Todas' || searchTerm.trim() !== '';
 
   return (
-    <div className="bg-white rounded-xl shadow-2xs border border-slate-200/90 overflow-hidden">
+    <div className="w-full min-w-0 bg-white rounded-xl shadow-2xs border border-slate-200/90 overflow-hidden relative isolate z-10">
       {/* =========================================================================
           ENCABEZADO INSTITUCIONAL OFICIAL POWER BI (#005B94 CON SUBTÍTULO DORADO)
           ========================================================================= */}
@@ -284,7 +284,7 @@ export function PadronClientes({
         )}
 
         {/* Selector de Pestañas de Estrategia con Colores Oficiales Power BI */}
-        <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-slate-200 pb-3 -mx-1 px-1 touch-pan-x">
+        <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-slate-200 pb-3 -mx-1 px-1 touch-pan-x touch-pan-y">
           {[
             { id: 0, label: 'Todas las Estrategias', color: '#005B94', texto: '#FFFFFF' },
             { id: 1, label: '1. Fidelización', color: configColores[1]?.color || ESTRATEGIA_COLORES[1].color, texto: configColores[1]?.texto || '#FFFFFF' },
@@ -413,10 +413,10 @@ export function PadronClientes({
         {/* Tabla Institucional del Padrón de Clientes */}
         <div
           ref={tableContainerRef}
-          className="overflow-x-auto border border-slate-200 rounded-lg bg-white relative touch-pan-x [scrollbar-width:thin] shadow-2xs"
+          className="overflow-x-auto border border-slate-200 rounded-lg bg-white relative touch-pan-x touch-pan-y [scrollbar-width:thin] shadow-2xs"
         >
           {loading && resultado && resultado.data.length > 0 && (
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-amber-400 to-[#005B94] animate-pulse z-30" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-amber-400 to-[#005B94] animate-pulse z-20" />
           )}
 
           <table className="w-full min-w-[1315px] table-fixed border-separate border-spacing-0 text-[11px]">
@@ -443,19 +443,19 @@ export function PadronClientes({
               <tr className="bg-[#005B94] text-white font-black text-[10px] uppercase tracking-wide">
                 <th
                   style={{ left: 0, width: '70px', minWidth: '70px', maxWidth: '70px' }}
-                  className="sticky left-0 bg-[#005B94] z-30 py-2.5 px-2 text-center border-b border-blue-900/40 border-r border-white/20 whitespace-nowrap"
+                  className="md:sticky md:left-0 bg-[#005B94] md:z-20 py-2.5 px-2 text-center border-b border-blue-900/40 border-r border-white/20 whitespace-nowrap"
                 >
                   PERIODO
                 </th>
                 <th
                   style={{ left: '70px', width: '95px', minWidth: '95px', maxWidth: '95px' }}
-                  className="sticky bg-[#005B94] z-30 py-2.5 px-2 text-center border-b border-blue-900/40 border-r border-white/20 whitespace-nowrap"
+                  className="md:sticky bg-[#005B94] md:z-20 py-2.5 px-2 text-center border-b border-blue-900/40 border-r border-white/20 whitespace-nowrap"
                 >
                   DOCUMENTO
                 </th>
                 <th
                   style={{ left: '165px', width: '220px', minWidth: '220px', maxWidth: '220px' }}
-                  className="sticky bg-[#005B94] z-30 py-2.5 px-2.5 text-left border-b border-blue-900/40 border-r border-white/30 whitespace-nowrap shadow-[4px_0_8px_-2px_rgba(0,0,0,0.25)]"
+                  className="md:sticky bg-[#005B94] md:z-20 py-2.5 px-2.5 text-left border-b border-blue-900/40 border-r border-white/30 whitespace-nowrap md:shadow-[4px_0_8px_-2px_rgba(0,0,0,0.25)]"
                 >
                   RAZÓN SOCIAL / CLIENTE
                 </th>
@@ -506,7 +506,7 @@ export function PadronClientes({
                 <tr>
                   <td colSpan={16} className="py-12 text-center text-slate-500">
                     <div className="w-8 h-8 border-3 border-slate-200 border-t-[#005B94] rounded-full animate-spin mx-auto mb-2" />
-                    <p className="text-xs font-bold text-slate-700">Consultando registros del padrón en SQL Server...</p>
+                    <p className="text-xs font-bold text-slate-700">Cargando datos...</p>
                   </td>
                 </tr>
               ) : resultado && resultado.data.length > 0 ? (
@@ -519,28 +519,28 @@ export function PadronClientes({
                       key={idx}
                       className="group hover:bg-[#F4F9FD] transition-colors text-slate-700 font-medium select-text"
                     >
-                      {/* Periodo (Sticky 100% sólido opaco) */}
+                      {/* Periodo (Sticky en escritorio, deslizable en móvil) */}
                       <td
                         style={{ left: 0, width: '70px', minWidth: '70px', maxWidth: '70px' }}
-                        className="sticky left-0 bg-white group-hover:bg-[#EBF3FB] z-20 py-2 px-2 text-center font-mono font-semibold text-slate-500 text-[10px] border-b border-slate-200 border-r border-slate-200 whitespace-nowrap"
+                        className="md:sticky md:left-0 bg-white group-hover:bg-[#EBF3FB] md:z-10 py-2 px-2 text-center font-mono font-semibold text-slate-500 text-[10px] border-b border-slate-200 border-r border-slate-200 whitespace-nowrap"
                       >
                         {c.periodo}
                       </td>
 
-                      {/* Documento (Sticky 100% sólido opaco) */}
+                      {/* Documento (Sticky en escritorio, deslizable en móvil) */}
                       <td
                         style={{ left: '70px', width: '95px', minWidth: '95px', maxWidth: '95px' }}
-                        className="sticky bg-white group-hover:bg-[#EBF3FB] z-20 py-2 px-2 font-mono font-bold text-slate-900 border-b border-slate-200 border-r border-slate-200 whitespace-nowrap"
+                        className="md:sticky bg-white group-hover:bg-[#EBF3FB] md:z-10 py-2 px-2 font-mono font-bold text-slate-900 border-b border-slate-200 border-r border-slate-200 whitespace-nowrap"
                       >
                         <span className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded border border-slate-200 text-[10px] tracking-tight">
                           {c.documento}
                         </span>
                       </td>
 
-                      {/* Razón Social / Nombre (Sticky 100% sólido opaco con elevación de sombra) */}
+                      {/* Razón Social / Nombre (Sticky en escritorio, deslizable en móvil) */}
                       <td
                         style={{ left: '165px', width: '220px', minWidth: '220px', maxWidth: '220px' }}
-                        className="sticky bg-white group-hover:bg-[#EBF3FB] z-20 py-2 px-2.5 font-extrabold text-slate-900 truncate border-b border-slate-200 border-r border-slate-300 shadow-[4px_0_8px_-2px_rgba(0,0,0,0.12)]"
+                        className="md:sticky bg-white group-hover:bg-[#EBF3FB] md:z-10 py-2 px-2.5 font-extrabold text-slate-900 truncate border-b border-slate-200 border-r border-slate-300 md:shadow-[4px_0_8px_-2px_rgba(0,0,0,0.12)]"
                         title={nombreLimpio}
                       >
                         {nombreLimpio}
@@ -561,39 +561,41 @@ export function PadronClientes({
                       </td>
 
                       {/* Saldo Vigente */}
-                      <td className="py-2 px-2 text-right font-mono font-bold text-emerald-700 whitespace-nowrap tabular-nums border-b border-slate-100 border-r border-slate-100">
+                      <td className="py-2 px-2 text-center font-mono text-slate-900 whitespace-nowrap tabular-nums border-b border-slate-100 border-r border-slate-100">
                         {c.saldoVigente > 0 ? (
-                          `S/ ${c.saldoVigente.toLocaleString('es-PE', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}`
+                          <span className="font-bold">
+                            {`S/ ${c.saldoVigente.toLocaleString('es-PE', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}`}
+                          </span>
                         ) : (
-                          <span className="text-slate-400 font-normal">S/ 0.00</span>
+                          <span className="font-normal">S/ 0.00</span>
                         )}
                       </td>
 
                       {/* Saldo Castigado */}
-                      <td className="py-2 px-2 text-right font-mono font-bold whitespace-nowrap tabular-nums border-b border-slate-100 border-r border-slate-100">
+                      <td className="py-2 px-2 text-center font-mono text-slate-900 whitespace-nowrap tabular-nums border-b border-slate-100 border-r border-slate-100">
                         {c.saldoCastigado > 0 ? (
-                          <span className="text-rose-700">
+                          <span className="font-bold">
                             {`S/ ${c.saldoCastigado.toLocaleString('es-PE', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}`}
                           </span>
                         ) : (
-                          <span className="text-slate-400 font-normal">S/ 0.00</span>
+                          <span className="font-normal">S/ 0.00</span>
                         )}
                       </td>
 
                       {/* Ubigeo: Departamento / Provincia / Distrito */}
-                      <td className="py-2 px-2.5 text-slate-700 truncate border-b border-slate-100 border-r border-slate-100">
+                      <td className="py-2 px-2.5 text-center text-slate-700 truncate border-b border-slate-100 border-r border-slate-100">
                         {renderTextoUbigeo(c.departamento)}
                       </td>
-                      <td className="py-2 px-2.5 text-slate-700 truncate border-b border-slate-100 border-r border-slate-100">
+                      <td className="py-2 px-2.5 text-center text-slate-700 truncate border-b border-slate-100 border-r border-slate-100">
                         {renderTextoUbigeo(c.provincia)}
                       </td>
-                      <td className="py-2 px-2.5 text-slate-700 truncate border-b border-slate-100 border-r border-slate-100">
+                      <td className="py-2 px-2.5 text-center text-slate-700 truncate border-b border-slate-100 border-r border-slate-100">
                         {renderTextoUbigeo(c.distrito)}
                       </td>
 
@@ -622,28 +624,28 @@ export function PadronClientes({
                       </td>
 
                       {/* Scoring SBS porcentual con 2 decimales exactos */}
-                      <td className="py-2 px-1 text-right font-mono text-[10px] border-b border-slate-100 border-r border-slate-100 tabular-nums">
-                        <span className={c.nor > 0 ? 'font-bold text-slate-900' : 'text-slate-300'}>
+                      <td className="py-2 px-1 text-center font-mono text-[10px] text-slate-900 border-b border-slate-100 border-r border-slate-100 tabular-nums">
+                        <span className={c.nor > 0 ? 'font-bold' : 'font-normal'}>
                           {formatPorcentaje(c.nor)}
                         </span>
                       </td>
-                      <td className="py-2 px-1 text-right font-mono text-[10px] border-b border-slate-100 border-r border-slate-100 tabular-nums">
-                        <span className={c.cpp > 0 ? 'font-bold text-slate-900' : 'text-slate-300'}>
+                      <td className="py-2 px-1 text-center font-mono text-[10px] text-slate-900 border-b border-slate-100 border-r border-slate-100 tabular-nums">
+                        <span className={c.cpp > 0 ? 'font-bold' : 'font-normal'}>
                           {formatPorcentaje(c.cpp)}
                         </span>
                       </td>
-                      <td className="py-2 px-1 text-right font-mono text-[10px] border-b border-slate-100 border-r border-slate-100 tabular-nums">
-                        <span className={c.def > 0 ? 'font-bold text-slate-900' : 'text-slate-300'}>
+                      <td className="py-2 px-1 text-center font-mono text-[10px] text-slate-900 border-b border-slate-100 border-r border-slate-100 tabular-nums">
+                        <span className={c.def > 0 ? 'font-bold' : 'font-normal'}>
                           {formatPorcentaje(c.def)}
                         </span>
                       </td>
-                      <td className="py-2 px-1 text-right font-mono text-[10px] border-b border-slate-100 border-r border-slate-100 tabular-nums">
-                        <span className={c.dud > 0 ? 'font-bold text-slate-900' : 'text-slate-300'}>
+                      <td className="py-2 px-1 text-center font-mono text-[10px] text-slate-900 border-b border-slate-100 border-r border-slate-100 tabular-nums">
+                        <span className={c.dud > 0 ? 'font-bold' : 'font-normal'}>
                           {formatPorcentaje(c.dud)}
                         </span>
                       </td>
-                      <td className="py-2 px-1 text-right font-mono text-[10px] border-b border-slate-100 tabular-nums">
-                        <span className={c.per > 0 ? 'font-bold text-slate-900' : 'text-slate-300'}>
+                      <td className="py-2 px-1 text-center font-mono text-[10px] text-slate-900 border-b border-slate-100 tabular-nums">
+                        <span className={c.per > 0 ? 'font-bold' : 'font-normal'}>
                           {formatPorcentaje(c.per)}
                         </span>
                       </td>

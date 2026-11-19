@@ -1,14 +1,16 @@
 import axios from 'axios';
 import { limpiarSesionYRedirigir } from './auth';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3100';
+
 export const httpClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3100',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor para inyectar automáticamente el JWT en cada petición
+// Interceptor para inyectar automáticamente el JWT si el usuario está autenticado
 httpClient.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');

@@ -13,6 +13,7 @@ import { MatrizTransicion } from './MatrizTransicion';
 import { CuadroEstrategias } from './CuadroEstrategias';
 import { PadronClientes } from './PadronClientes';
 import { MapaPeru } from './MapaPeru';
+import { KpisEmpresaView } from './KpisEmpresaView';
 import { CustomSelect } from './CustomSelect';
 import { useEstrategiaColores } from '../constants/estrategiaColores';
 import { empresaService, EmpresaDto } from '@/modules/empresas/services/empresaService';
@@ -20,7 +21,7 @@ import { empresaService, EmpresaDto } from '@/modules/empresas/services/empresaS
 export function PortfolioView() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const moduloQuery = searchParams.get('modulo') as 'matriz' | 'detalle' | 'mapa' | null;
+  const moduloQuery = searchParams.get('modulo') as 'kpis' | 'matriz' | 'detalle' | 'mapa' | null;
   const entidadQuery = searchParams.get('entidad');
 
   // Slicers / Filtros Globales
@@ -52,12 +53,19 @@ export function PortfolioView() {
   }, [logoEmpresa, empresas.length]);
 
   // Navegación de Vistas / Pestañas principales (reactivo a la barra lateral / URL)
-  const [pestanaActiva, setPestanaActiva] = useState<'matriz' | 'detalle' | 'mapa'>(
-    moduloQuery === 'detalle' || moduloQuery === 'mapa' ? moduloQuery : 'matriz'
+  const [pestanaActiva, setPestanaActiva] = useState<'kpis' | 'matriz' | 'detalle' | 'mapa'>(
+    moduloQuery === 'matriz' || moduloQuery === 'detalle' || moduloQuery === 'mapa'
+      ? moduloQuery
+      : 'kpis'
   );
 
   useEffect(() => {
-    if (moduloQuery === 'matriz' || moduloQuery === 'detalle' || moduloQuery === 'mapa') {
+    if (
+      moduloQuery === 'kpis' ||
+      moduloQuery === 'matriz' ||
+      moduloQuery === 'detalle' ||
+      moduloQuery === 'mapa'
+    ) {
       let active = true;
       Promise.resolve().then(() => {
         if (active) setPestanaActiva(moduloQuery);
@@ -73,7 +81,8 @@ export function PortfolioView() {
       const customEvent = e as CustomEvent<string>;
       if (
         customEvent.detail &&
-        (customEvent.detail === 'matriz' ||
+        (customEvent.detail === 'kpis' ||
+          customEvent.detail === 'matriz' ||
           customEvent.detail === 'detalle' ||
           customEvent.detail === 'mapa')
       ) {
@@ -83,6 +92,14 @@ export function PortfolioView() {
     window.addEventListener('portfolio-cambiar-modulo', handler);
     return () => window.removeEventListener('portfolio-cambiar-modulo', handler);
   }, []);
+
+  const handleIrAModulo = useCallback(
+    (modulo: 'kpis' | 'matriz' | 'detalle' | 'mapa') => {
+      setPestanaActiva(modulo);
+      router.push(`/cliente/portfolio?modulo=${modulo}`, { scroll: false });
+    },
+    [router]
+  );
 
   // Modo de visualización en la Matriz y Cuadro: Conteo de Clientes vs Saldos en Soles
   const [modo, setModo] = useState<'clientes' | 'saldos'>('clientes');
@@ -606,7 +623,7 @@ export function PortfolioView() {
   }
 
   return (
-    <div className="space-y-3 max-w-[1600px] mx-auto pb-1">
+    <div className="w-full min-w-0 space-y-3 max-w-[1600px] mx-auto pb-1">
       {/* Barra de Auditoría / Supervisión de Administrador */}
       {isAdmin && (
         <div className="bg-gradient-to-r from-[#0B192C] to-[#1B4589] text-white px-4 py-2.5 rounded-xl shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border border-slate-700/80">
@@ -617,12 +634,13 @@ export function PortfolioView() {
 
             {/* Logo de la Empresa Supervisada */}
             {logoEmpresa ? (
-              <div className="bg-white rounded-lg px-2 py-1 shadow-xs border border-white/20 flex items-center justify-center shrink-0">
+              <div className="bg-white rounded-lg h-9 max-h-9 px-2.5 py-1 shadow-xs border border-white/20 flex items-center justify-center overflow-hidden shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={logoEmpresa}
                   alt={entidadSeleccionada}
-                  className="h-8 sm:h-9 w-auto max-w-[180px] sm:max-w-[210px] object-contain"
+                  style={{ height: '26px', maxHeight: '26px', width: 'auto', maxWidth: '170px' }}
+                  className="h-6.5 w-auto object-contain shrink-0"
                 />
               </div>
             ) : (
@@ -709,14 +727,29 @@ export function PortfolioView() {
       {pestanaActiva === 'matriz' && (
         <section aria-label="Indicadores Clave de Riesgo" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-1">
           {/* KPI 1: Exposición Total con Barra de Progreso Multi-Segmento */}
-          <div className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl p-4 sm:p-4.5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1B4589] via-[#00C9A7] to-[#1B4589] opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl p-4 sm:p-4.5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between relative group">
+            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r from-[#1B4589] via-[#00C9A7] to-[#1B4589] opacity-80 group-hover:opacity-100 transition-opacity" />
 
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                  Exposición Total Cartera
-                </span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                    Exposición Total Cartera
+                  </span>
+                  <span className="relative group/info inline-flex items-center">
+                    <span
+                      tabIndex={0}
+                      aria-label="Origen del indicador Exposición Total Cartera"
+                      className="w-3.5 h-3.5 rounded-full bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-[#1B4589] text-[9px] font-black inline-flex items-center justify-center cursor-help transition-colors"
+                    >
+                      i
+                    </span>
+                    <span className="pointer-events-none opacity-0 group-hover/info:opacity-100 group-focus-within/info:opacity-100 transition-opacity duration-150 absolute left-0 top-5 z-30 w-56 p-2.5 rounded-xl bg-slate-900 text-white text-[10.5px] leading-relaxed font-medium shadow-xl border border-slate-700">
+                      <strong className="text-amber-300 block mb-0.5">Origen: Matriz de Transición</strong>
+                      Suma del <strong>Saldo Total</strong> de todas las celdas (E1 a E6) para el corte {periodoSeleccionado || 'vigente'}.
+                    </span>
+                  </span>
+                </div>
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-50 text-[#1B4589] border border-blue-200/60 uppercase tracking-tight shrink-0">
                   Cartera Total
                 </span>
@@ -729,6 +762,9 @@ export function PortfolioView() {
               </div>
               <p className="text-[11px] font-medium text-slate-400">
                 S/ {(totalSaldo / 1e6).toFixed(1)}M consolidado en corte
+              </p>
+              <p className="text-[10px] font-semibold text-slate-400/90 mt-0.5">
+                Fuente: Matriz 8×9 (Saldo Total · {periodoSeleccionado || 'Corte'})
               </p>
             </div>
 
@@ -766,14 +802,29 @@ export function PortfolioView() {
           </div>
 
           {/* KPI 2: Población de Deudores con Espectro de Micro-Barras por Estrategia */}
-          <div className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl p-4 sm:p-4.5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-teal-400 to-amber-500 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl p-4 sm:p-4.5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between relative group">
+            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r from-amber-500 via-teal-400 to-amber-500 opacity-80 group-hover:opacity-100 transition-opacity" />
 
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                  Población de Deudores
-                </span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                    Población de Deudores
+                  </span>
+                  <span className="relative group/info inline-flex items-center">
+                    <span
+                      tabIndex={0}
+                      aria-label="Origen del indicador Población de Deudores"
+                      className="w-3.5 h-3.5 rounded-full bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-800 text-[9px] font-black inline-flex items-center justify-center cursor-help transition-colors"
+                    >
+                      i
+                    </span>
+                    <span className="pointer-events-none opacity-0 group-hover/info:opacity-100 group-focus-within/info:opacity-100 transition-opacity duration-150 absolute left-0 top-5 z-30 w-56 p-2.5 rounded-xl bg-slate-900 text-white text-[10.5px] leading-relaxed font-medium shadow-xl border border-slate-700">
+                      <strong className="text-amber-300 block mb-0.5">Origen: Matriz &amp; Estrategias</strong>
+                      Conteo total de clientes únicos distribuidos en las 6 estrategias (<strong>E1 a E6</strong>) en el corte {periodoSeleccionado || 'vigente'}.
+                    </span>
+                  </span>
+                </div>
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/60 uppercase tracking-tight shrink-0">
                   Titulares
                 </span>
@@ -786,6 +837,9 @@ export function PortfolioView() {
               </div>
               <p className="text-[11px] font-medium text-slate-400">
                 100.0% del universo evaluado
+              </p>
+              <p className="text-[10px] font-semibold text-slate-400/90 mt-0.5">
+                Fuente: Suma E1–E6 (Matriz · {periodoSeleccionado || 'Corte'})
               </p>
             </div>
 
@@ -829,14 +883,29 @@ export function PortfolioView() {
           </div>
 
           {/* KPI 3: Cartera Sana con Radial Circular Ring Gauge */}
-          <div className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl p-4 sm:p-4.5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl p-4 sm:p-4.5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between relative group">
+            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 opacity-80 group-hover:opacity-100 transition-opacity" />
 
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                  Cartera Sana (E1 + E2)
-                </span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                    Cartera Sana (E1 + E2)
+                  </span>
+                  <span className="relative group/info inline-flex items-center">
+                    <span
+                      tabIndex={0}
+                      aria-label="Origen del indicador Cartera Sana"
+                      className="w-3.5 h-3.5 rounded-full bg-slate-100 hover:bg-emerald-100 text-slate-500 hover:text-emerald-700 text-[9px] font-black inline-flex items-center justify-center cursor-help transition-colors"
+                    >
+                      i
+                    </span>
+                    <span className="pointer-events-none opacity-0 group-hover/info:opacity-100 group-focus-within/info:opacity-100 transition-opacity duration-150 absolute left-0 top-5 z-30 w-60 p-2.5 rounded-xl bg-slate-900 text-white text-[10.5px] leading-relaxed font-medium shadow-xl border border-slate-700">
+                      <strong className="text-emerald-300 block mb-0.5">Origen: Cuadro de Estrategias</strong>
+                      Suma del % de saldo en <strong>1. Fidelización (E1)</strong> + <strong>2. Prevención (E2)</strong> respecto al Saldo Total.
+                    </span>
+                  </span>
+                </div>
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60 uppercase tracking-tight shrink-0 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Bajo Riesgo
@@ -850,7 +919,10 @@ export function PortfolioView() {
                     {pctSana} %
                   </span>
                   <p className="text-[11px] font-medium text-slate-400 mt-0.5">
-                    Fidelización & Prevención
+                    Fidelización &amp; Prevención
+                  </p>
+                  <p className="text-[10px] font-semibold text-slate-400/90 mt-0.5">
+                    Fórmula: (Saldo E1 + E2) ÷ Saldo Total
                   </p>
                 </div>
 
@@ -903,14 +975,29 @@ export function PortfolioView() {
           </div>
 
           {/* KPI 4: Mora Crítica con Wave Sparkline y Alerta */}
-          <div className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl p-4 sm:p-4.5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-red-600 to-rose-700 opacity-80 group-hover:opacity-100 transition-opacity" />
+          <div className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl p-4 sm:p-4.5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between relative group">
+            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r from-rose-500 via-red-600 to-rose-700 opacity-80 group-hover:opacity-100 transition-opacity" />
 
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                  Mora Crítica (E6)
-                </span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                    Mora Crítica (E6)
+                  </span>
+                  <span className="relative group/info inline-flex items-center">
+                    <span
+                      tabIndex={0}
+                      aria-label="Origen del indicador Mora Crítica"
+                      className="w-3.5 h-3.5 rounded-full bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 text-[9px] font-black inline-flex items-center justify-center cursor-help transition-colors"
+                    >
+                      i
+                    </span>
+                    <span className="pointer-events-none opacity-0 group-hover/info:opacity-100 group-focus-within/info:opacity-100 transition-opacity duration-150 absolute right-0 sm:left-0 top-5 z-30 w-60 p-2.5 rounded-xl bg-slate-900 text-white text-[10.5px] leading-relaxed font-medium shadow-xl border border-slate-700">
+                      <strong className="text-rose-300 block mb-0.5">Origen: Cuadro de Estrategias</strong>
+                      Participación de la estrategia <strong>6. Solución de Conciliación (E6)</strong> sobre el Saldo Total de la cartera.
+                    </span>
+                  </span>
+                </div>
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200/60 uppercase tracking-tight shrink-0 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
                   Severa
@@ -924,7 +1011,10 @@ export function PortfolioView() {
                     {pctCritica} %
                   </span>
                   <p className="text-[11px] font-medium text-slate-400 mt-0.5">
-                    Conciliación & Castigo
+                    Conciliación &amp; Castigo
+                  </p>
+                  <p className="text-[10px] font-semibold text-slate-400/90 mt-0.5">
+                    Fórmula: Saldo E6 ÷ Saldo Total
                   </p>
                 </div>
 
@@ -973,9 +1063,9 @@ export function PortfolioView() {
           Fila única garantizada en laptops (lg:flex-nowrap) con botón verde Excel (#107C41)
           ========================================================================= */}
       {pestanaActiva === 'matriz' && (
-        <section aria-label="Herramientas y Filtros Operativos" className="bg-white border border-slate-200/90 rounded-lg px-3.5 py-1.5 shadow-2xs flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 relative z-30 overflow-visible">
-          {/* Izquierda: Indicador formal del módulo + Selector de Layout (Cero Scroll) */}
-          <div className="flex items-center gap-2 shrink-0">
+        <section aria-label="Herramientas y Filtros Operativos" className="bg-white border border-slate-200/90 rounded-lg px-3 sm:px-3.5 py-2 sm:py-1.5 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 lg:gap-3 relative z-20 overflow-visible">
+          {/* Izquierda: Indicador formal del módulo + Selector de Layout (solo escritorio) */}
+          <div className="flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto shrink-0">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-[#1B4589]" />
               <span className="text-xs font-black text-slate-800 uppercase tracking-tight whitespace-nowrap">
@@ -983,10 +1073,10 @@ export function PortfolioView() {
               </span>
             </div>
 
-            <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+            <div className="h-4 w-px bg-slate-200 hidden lg:block" />
 
-            {/* Alternador de Layout Innovador: Dividido (Cero Scroll) vs Extender */}
-            <div className="inline-flex items-center h-7 bg-slate-100 p-0.5 rounded-md border border-slate-200 text-xs font-bold shrink-0">
+            {/* Alternador de Layout: Dividido vs Extender (Solo en pantallas grandes lg+) */}
+            <div className="hidden lg:inline-flex items-center h-7 bg-slate-100 p-0.5 rounded-md border border-slate-200 text-xs font-bold shrink-0">
               <button
                 type="button"
                 onClick={() => setVistaLayout('split')}
@@ -1021,10 +1111,10 @@ export function PortfolioView() {
             </div>
           </div>
 
-          {/* Derecha: Filtros Operativos de Cartera + Botón Exportar (EN UNA SOLA FILA ESTRICTA) */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          {/* Derecha: Filtros Operativos de Cartera + Botón Exportar (adaptable en móvil, fila única en desktop) */}
+          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full lg:w-auto">
             {/* 1 y 2: Selectores de Periodo y Segmento */}
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
               {periodos.length > 0 && (
                 <CustomSelect
                   value={periodoSeleccionado}
@@ -1133,7 +1223,7 @@ export function PortfolioView() {
         vistaLayout === 'split' ? (
           /* MODO CABINA ZERO-SCROLL: Matriz (7 cols) y Estrategias (5 cols) con MISMO TAMAÑO exacto */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
-            <div className="lg:col-span-7 flex flex-col">
+            <div className="lg:col-span-7 min-w-0 flex flex-col">
               <MatrizTransicion
                 data={matrizData}
                 dataBase={matrizBaseData}
@@ -1157,7 +1247,7 @@ export function PortfolioView() {
               />
             </div>
 
-            <div className="lg:col-span-5 flex flex-col">
+            <div className="lg:col-span-5 min-w-0 flex flex-col">
               <CuadroEstrategias
                 data={estrategiasData}
                 loading={loading}
@@ -1231,6 +1321,16 @@ export function PortfolioView() {
         )
       )}
 
+      {pestanaActiva === 'kpis' && (
+        <KpisEmpresaView
+          periodo={periodoSeleccionado}
+          periodos={periodos}
+          onPeriodoChange={setPeriodoSeleccionado}
+          entidad={entidadSeleccionada}
+          onIrAModulo={handleIrAModulo}
+        />
+      )}
+
       {pestanaActiva === 'detalle' && (
         <PadronClientes
           periodo={periodoSeleccionado}
@@ -1248,7 +1348,7 @@ export function PortfolioView() {
           onPeriodoChange={setPeriodoSeleccionado}
           entidad={entidadSeleccionada}
           hideToolbar={false}
-          onIrAPadron={() => setPestanaActiva('detalle')}
+          onIrAPadron={() => handleIrAModulo('detalle')}
         />
       )}
     </div>

@@ -104,14 +104,31 @@ export default function AdminDashboardPage() {
   const pctCastigada = totalVigMasCast > 0 ? (deudasCastigadas / totalVigMasCast) * 100 : 27.7;
 
   // Lista de las 6 Estrategias Oficiales
-  const estrategias = data?.estrategias || [
-    { id: 1, descripcion: '1. FIDELIZAR', cantidad: 24198, saldo: 654210400, participacionClientes: 32.0, participacionSaldo: 22.7, color: '#107C41' },
-    { id: 2, descripcion: '2. PREVENIR', cantidad: 25183, saldo: 1226137021, participacionClientes: 33.3, participacionSaldo: 42.6, color: '#1B4589' },
-    { id: 3, descripcion: '3. CONTENER', cantidad: 3099, saldo: 78120300, participacionClientes: 4.1, participacionSaldo: 2.7, color: '#F59E0B' },
-    { id: 4, descripcion: '4. ALERTA', cantidad: 2741, saldo: 61400200, participacionClientes: 3.6, participacionSaldo: 2.1, color: '#EA580C' },
-    { id: 5, descripcion: '5. PRE-JUDICIAL', cantidad: 2866, saldo: 77870330, participacionClientes: 3.8, participacionSaldo: 2.7, color: '#DC2626' },
-    { id: 6, descripcion: '6. JUDICIAL', cantidad: 17476, saldo: 781727083, participacionClientes: 23.1, participacionSaldo: 27.1, color: '#E11D48' },
-  ];
+  const estrategias = useMemo(
+    () =>
+      data?.estrategias || [
+        { id: 1, descripcion: '1. FIDELIZACION', cantidad: 24198, saldo: 654210400, participacionClientes: 32.0, participacionSaldo: 22.7, color: '#107C41' },
+        { id: 2, descripcion: '2. PREVENCION', cantidad: 25183, saldo: 1226137021, participacionClientes: 33.3, participacionSaldo: 42.6, color: '#1B4589' },
+        { id: 3, descripcion: '3. MITIGACION', cantidad: 3099, saldo: 78120300, participacionClientes: 4.1, participacionSaldo: 2.7, color: '#F59E0B' },
+        { id: 4, descripcion: '4. BLINDAJE', cantidad: 2741, saldo: 61400200, participacionClientes: 3.6, participacionSaldo: 2.1, color: '#EA580C' },
+        { id: 5, descripcion: '5. COBRANZA DIRECCIONADA', cantidad: 2866, saldo: 77870330, participacionClientes: 3.8, participacionSaldo: 2.7, color: '#DC2626' },
+        { id: 6, descripcion: '6. SOLUCION DE CONCILIACION', cantidad: 17476, saldo: 781727083, participacionClientes: 23.1, participacionSaldo: 27.1, color: '#E11D48' },
+      ],
+    [data?.estrategias]
+  );
+
+  // Porcentajes reales por tier de riesgo (E1+E2, E3+E4, E5+E6)
+  const { pctTierBajo, pctTierAlerta, pctTierCritico } = useMemo(() => {
+    const sumSaldo = (ids: number[]) =>
+      estrategias
+        .filter((e) => ids.includes(e.id))
+        .reduce((acc, e) => acc + (e.participacionSaldo || 0), 0);
+    return {
+      pctTierBajo: Number(sumSaldo([1, 2]).toFixed(1)),
+      pctTierAlerta: Number(sumSaldo([3, 4]).toFixed(1)),
+      pctTierCritico: Number(sumSaldo([5, 6]).toFixed(1)),
+    };
+  }, [estrategias]);
 
   // Top Departamentos por Cartera (Horizontal Bar Chart)
   const topRegiones = useMemo(() => {
@@ -184,7 +201,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Slicers de Filtro y Controles del Administrador */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto justify-end">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto justify-between sm:justify-end">
           {/* Slicer Periodo Mensual */}
           {periodos.length > 0 && (
             <CustomSelect
@@ -278,6 +295,9 @@ export default function AdminDashboardPage() {
               <span className="text-xs font-bold text-slate-500 mt-1 block">
                 Deudores Totales en Gestión
               </span>
+              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
+                Fuente: Consolidado SQL Server (E1–E6)
+              </span>
             </div>
           </div>
           <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 hidden xl:inline">
@@ -317,10 +337,13 @@ export default function AdminDashboardPage() {
               Tasa de Cartera Sana
             </span>
             <span className="text-[11px] text-slate-500 font-medium block">
-              Fidelización & Prevención (C1 & C2)
+              Fidelización &amp; Prevención (E1 &amp; E2)
             </span>
             <span className="font-mono text-base font-black text-[#0D9488] block mt-0.5">
               S/ {(kpis.saldoSano / 1e6).toFixed(1)} M
+            </span>
+            <span className="text-[10px] font-semibold text-slate-400 block">
+              Fórmula: (Saldo E1 + E2) ÷ Saldo Total
             </span>
           </div>
         </div>
@@ -357,10 +380,13 @@ export default function AdminDashboardPage() {
               Tasa de Mora Crítica
             </span>
             <span className="text-[11px] text-slate-500 font-medium block">
-              Solución Conciliación Judicial (C6)
+              Solución de Conciliación (E6)
             </span>
             <span className="font-mono text-base font-black text-[#E11D48] block mt-0.5">
               S/ {(kpis.saldoCritico / 1e6).toFixed(1)} M
+            </span>
+            <span className="text-[10px] font-semibold text-slate-400 block">
+              Fórmula: Saldo E6 ÷ Saldo Total
             </span>
           </div>
         </div>
@@ -390,6 +416,9 @@ export default function AdminDashboardPage() {
               <span className="text-[10px] font-bold text-teal-100 block mt-0.5">
                 {((clientesExclusivos / totalDeudores) * 100).toFixed(1)}% del Universo
               </span>
+              <span className="text-[9.5px] text-teal-200/90 font-medium block mt-0.5">
+                Fuente: Col. 9 Exclusivos (Matriz 8×9)
+              </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center text-2xl shrink-0">
               👥
@@ -411,6 +440,9 @@ export default function AdminDashboardPage() {
               <span className="text-[10px] font-bold text-slate-300 block mt-0.5">
                 {((clientesCompartidos / totalDeudores) * 100).toFixed(1)}% del Universo
               </span>
+              <span className="text-[9.5px] text-slate-400 font-medium block mt-0.5">
+                Fuente: Cols. 1–8 Compartida (Matriz)
+              </span>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-2xl shrink-0">
               🏢
@@ -419,11 +451,16 @@ export default function AdminDashboardPage() {
 
           {/* Tarjeta 3 (Rosa/Coral): Desglose por Estrategias de Riesgo */}
           <div className="bg-[#E11D48] text-white rounded-2xl p-4 shadow-sm space-y-2.5">
-            <div className="flex items-center justify-between border-b border-white/20 pb-2">
-              <span className="text-xs font-black uppercase tracking-wider">
-                Estrategias de Cartera
+            <div className="border-b border-white/20 pb-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider">
+                  Estrategias de Cartera
+                </span>
+                <span className="text-sm">⭐</span>
+              </div>
+              <span className="text-[9.5px] text-pink-100/90 font-medium block mt-0.5">
+                Fuente: Clientes únicos por estrategia (E1–E6)
               </span>
-              <span className="text-sm">⭐</span>
             </div>
 
             <div className="space-y-1.5 text-xs font-bold">
@@ -576,8 +613,11 @@ export default function AdminDashboardPage() {
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight block">
                   Exposición Total
                 </span>
-                <span className="font-mono text-sm font-black text-slate-900">
+                <span className="font-mono text-sm font-black text-slate-900 block">
                   S/ {(totalCartera / 1e6).toFixed(0)} Millones
+                </span>
+                <span className="text-[9.5px] text-slate-400 font-medium">
+                  Fuente: Saldo Total Matriz (Vigente + Castigado)
                 </span>
               </div>
             </div>
@@ -601,7 +641,7 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
                 <p className="text-[10px] text-slate-400 font-medium mb-3">
-                  Comparativa de Deudores vs Saldos en C1..C6
+                  Comparativa de Deudores vs Saldos en E1..E6
                 </p>
 
                 {/* Columnas verticales agrupadas simuladas */}
@@ -625,7 +665,7 @@ export default function AdminDashboardPage() {
                           />
                         </div>
                         <span className="text-[9px] font-extrabold text-slate-500 font-mono">
-                          C{est.id}
+                          E{est.id}
                         </span>
                       </div>
                     );
@@ -634,8 +674,8 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="flex justify-between items-center text-[10px] text-slate-400 pt-2 font-medium">
-                <span>E1: Fidelizar</span>
-                <span>E6: Judicial</span>
+                <span>E1: Fidelización</span>
+                <span>E6: Conciliación</span>
               </div>
             </div>
           </div>
@@ -652,13 +692,13 @@ export default function AdminDashboardPage() {
                   <span className="text-xs text-teal-600">✓</span>
                 </div>
                 <p className="text-[10px] text-slate-400 font-medium mb-3">
-                  Tiers de Riesgo Sistémico
+                  Tiers por Saldo: E1–E2, E3–E4 y E5–E6 (Matriz)
                 </p>
 
                 {/* Gráfico de Anillos Concéntricos SVG */}
                 <div className="flex items-center justify-center my-1 relative">
                   <svg viewBox="0 0 100 100" className="w-28 h-28 transform -rotate-90">
-                    {/* Anillo 1 Exterior (Teal - Bajo Riesgo C1 & C2) */}
+                    {/* Anillo 1 Exterior (Teal - Bajo Riesgo E1 & E2, C=251.3) */}
                     <circle cx="50" cy="50" r="40" stroke="#F1F5F9" strokeWidth="6" fill="none" />
                     <circle
                       cx="50"
@@ -666,12 +706,12 @@ export default function AdminDashboardPage() {
                       r="40"
                       stroke="#0D9488"
                       strokeWidth="6"
-                      strokeDasharray="164, 251"
+                      strokeDasharray={`${((Math.min(100, pctTierBajo) / 100) * 251.3).toFixed(1)}, 251.3`}
                       strokeLinecap="round"
                       fill="none"
                     />
 
-                    {/* Anillo 2 Medio (Amber - Alerta C3 & C4) */}
+                    {/* Anillo 2 Medio (Amber - Alerta E3 & E4, C=175.9) */}
                     <circle cx="50" cy="50" r="28" stroke="#F1F5F9" strokeWidth="6" fill="none" />
                     <circle
                       cx="50"
@@ -679,12 +719,12 @@ export default function AdminDashboardPage() {
                       r="28"
                       stroke="#F59E0B"
                       strokeWidth="6"
-                      strokeDasharray="30, 175"
+                      strokeDasharray={`${((Math.min(100, Math.max(pctTierAlerta, 2)) / 100) * 175.9).toFixed(1)}, 175.9`}
                       strokeLinecap="round"
                       fill="none"
                     />
 
-                    {/* Anillo 3 Interior (Pink - Severo C5 & C6) */}
+                    {/* Anillo 3 Interior (Pink - Severo E5 & E6, C=100.5) */}
                     <circle cx="50" cy="50" r="16" stroke="#F1F5F9" strokeWidth="6" fill="none" />
                     <circle
                       cx="50"
@@ -692,7 +732,7 @@ export default function AdminDashboardPage() {
                       r="16"
                       stroke="#E11D48"
                       strokeWidth="6"
-                      strokeDasharray="45, 100"
+                      strokeDasharray={`${((Math.min(100, pctTierCritico) / 100) * 100.5).toFixed(1)}, 100.5`}
                       strokeLinecap="round"
                       fill="none"
                     />
@@ -703,23 +743,23 @@ export default function AdminDashboardPage() {
                   <div className="flex items-center justify-between text-slate-700">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#0D9488]" />
-                      <span>Bajo Riesgo (C1 & C2)</span>
+                      <span>Bajo Riesgo (E1 &amp; E2)</span>
                     </span>
-                    <span className="font-mono text-[#0D9488]">65.3%</span>
+                    <span className="font-mono text-[#0D9488]">{pctTierBajo}%</span>
                   </div>
                   <div className="flex items-center justify-between text-slate-700">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
-                      <span>Alerta Temprana (C3 & C4)</span>
+                      <span>Alerta Temprana (E3 &amp; E4)</span>
                     </span>
-                    <span className="font-mono text-[#F59E0B]">4.8%</span>
+                    <span className="font-mono text-[#F59E0B]">{pctTierAlerta}%</span>
                   </div>
                   <div className="flex items-center justify-between text-slate-700">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#E11D48]" />
-                      <span>Mora Crítica (C5 & C6)</span>
+                      <span>Mora Crítica (E5 &amp; E6)</span>
                     </span>
-                    <span className="font-mono text-[#E11D48]">29.8%</span>
+                    <span className="font-mono text-[#E11D48]">{pctTierCritico}%</span>
                   </div>
                 </div>
               </div>
@@ -805,7 +845,11 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Cartera Activa:</span>
-                    <span className="text-white font-bold">Financiera Qapaq</span>
+                    <span className="text-white font-bold">
+                      {empresas.length > 1
+                        ? `${empresas.length} Entidades`
+                        : empresas[0]?.nombre || 'Plataforma Central'}
+                    </span>
                   </div>
                 </div>
               </div>

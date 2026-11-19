@@ -464,7 +464,7 @@ export function CuadroEstrategias({
                     >
                       {fila.nombre}
                     </td>
-                    <td className="py-0.5 px-2 text-right font-mono font-bold text-slate-900 border-r border-slate-200 bg-white text-[10.5px]">
+                    <td className="py-0.5 px-2 text-center font-mono font-bold text-slate-900 border-r border-slate-200 bg-white text-[10.5px]">
                       {modo === 'clientes'
                         ? fila.valor.toLocaleString('es-PE')
                         : 'S/ ' +
@@ -472,7 +472,7 @@ export function CuadroEstrategias({
                             maximumFractionDigits: 0,
                           })}
                     </td>
-                    <td className="py-0.5 px-2 text-right font-mono font-bold text-slate-900 bg-white text-[10.5px]">
+                    <td className="py-0.5 px-2 text-center font-mono font-bold text-slate-900 bg-white text-[10.5px]">
                       {fila.pctOficial} %
                     </td>
                   </tr>
@@ -483,7 +483,7 @@ export function CuadroEstrategias({
                   <td className="py-0.5 px-2 uppercase text-[10px] border-r border-slate-300">
                     Total
                   </td>
-                  <td className="py-0.5 px-2 text-right font-mono text-[10.5px] border-r border-slate-300">
+                  <td className="py-0.5 px-2 text-center font-mono text-[10.5px] border-r border-slate-300">
                     {modo === 'clientes'
                       ? totalTablaCantidad.toLocaleString('es-PE')
                       : 'S/ ' +
@@ -491,7 +491,7 @@ export function CuadroEstrategias({
                           maximumFractionDigits: 0,
                         })}
                   </td>
-                  <td className="py-0.5 px-2 text-right font-mono text-[10.5px]">
+                  <td className="py-0.5 px-2 text-center font-mono text-[10.5px]">
                     {totalTablaPctOficial} %
                   </td>
                 </tr>
@@ -625,7 +625,7 @@ export function CuadroEstrategias({
         /* VISTA APILADA COMPLETA (3 COLUMNAS POWER BI EXACTAS) */
         <div className="p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
           {/* Col 1: Tabla de Estrategias Oficial (5 cols) */}
-          <div className="lg:col-span-5 overflow-x-auto rounded-lg border border-slate-200">
+          <div className="lg:col-span-5 min-w-0 overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full border-collapse text-xs text-left">
               <thead>
                 <tr className="bg-[#005B94] text-white font-black text-[11px] tracking-wide">
@@ -656,7 +656,7 @@ export function CuadroEstrategias({
                     >
                       {fila.nombre}
                     </td>
-                    <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 border-r border-slate-200 bg-white">
+                    <td className="py-2 px-3 text-center font-mono font-bold text-slate-900 border-r border-slate-200 bg-white">
                       {modo === 'clientes'
                         ? fila.valor.toLocaleString('es-PE')
                         : 'S/ ' +
@@ -664,7 +664,7 @@ export function CuadroEstrategias({
                             maximumFractionDigits: 0,
                           })}
                     </td>
-                    <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 bg-white">
+                    <td className="py-2 px-3 text-center font-mono font-bold text-slate-900 bg-white">
                       {fila.pctOficial} %
                     </td>
                   </tr>
@@ -673,7 +673,7 @@ export function CuadroEstrategias({
                   <td className="py-2.5 px-3 uppercase text-[11px] border-r border-slate-300">
                     Total
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono text-[11.5px] border-r border-slate-300">
+                  <td className="py-2.5 px-3 text-center font-mono text-[11.5px] border-r border-slate-300">
                     {modo === 'clientes'
                       ? totalTablaCantidad.toLocaleString('es-PE')
                       : 'S/ ' +
@@ -681,7 +681,7 @@ export function CuadroEstrategias({
                           maximumFractionDigits: 0,
                         })}
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono text-[11.5px]">
+                  <td className="py-2.5 px-3 text-center font-mono text-[11.5px]">
                     {totalTablaPctOficial} %
                   </td>
                 </tr>

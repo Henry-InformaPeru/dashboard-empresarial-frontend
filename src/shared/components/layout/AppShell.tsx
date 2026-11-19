@@ -64,7 +64,7 @@ export function AppShell({
 
       <div className="flex-1 flex flex-col min-w-0">
         <Header onMenu={alternarMenu} />
-        <main className="flex-1 flex flex-col p-2 sm:p-3 lg:p-3.5 xl:p-4 pb-2 overflow-y-auto max-w-full overflow-x-hidden">
+        <main className="flex-1 flex flex-col p-2 sm:p-3 lg:p-3.5 xl:p-4 pb-2 min-w-0 max-w-full overflow-x-clip">
           {children}
         </main>
         {conFooter && <Footer />}

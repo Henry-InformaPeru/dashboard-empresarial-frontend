@@ -168,15 +168,15 @@ export function LoginForm() {
             <div className="pt-2.5 border-t border-white/10 grid grid-cols-3 gap-2 text-center">
               <div>
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Cobertura</p>
-                <p className="text-xs font-black text-white mt-0.5">24 Dptos. Perú</p>
+                <p className="text-xs font-black text-white mt-0.5">Nivel Nacional</p>
               </div>
               <div>
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Seguridad</p>
-                <p className="text-xs font-black text-emerald-400 mt-0.5">AES-256 Bit</p>
+                <p className="text-xs font-black text-emerald-400 mt-0.5">Conexión Cifrada</p>
               </div>
               <div>
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Acceso</p>
-                <p className="text-xs font-black text-white mt-0.5">RBAC Estricto</p>
+                <p className="text-xs font-black text-white mt-0.5">Por Empresa y Rol</p>
               </div>
             </div>
           </div>

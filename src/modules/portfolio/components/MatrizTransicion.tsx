@@ -164,10 +164,10 @@ export function MatrizTransicion({
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-2xs border border-slate-200/90 overflow-hidden relative flex flex-col h-full">
+    <div className="bg-white rounded-xl shadow-2xs border border-slate-200/90 overflow-hidden relative isolate z-10 flex flex-col h-full">
       {/* Indicador sutil de actualización en segundo plano */}
       {loading && data && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#1B4589] animate-pulse z-30" />
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#1B4589] animate-pulse z-20" />
       )}
 
       {/* Bloque Superior: Cabecera + Banner + Matriz */}
@@ -336,7 +336,7 @@ export function MatrizTransicion({
       )}
 
       {/* Tabla Matriz con Scroll Táctil Responsivo y Primera Columna Fija */}
-      <div className="overflow-x-auto touch-pan-x py-2 px-0 [scrollbar-width:thin]">
+      <div className="overflow-x-auto touch-pan-x touch-pan-y py-2 px-0 [scrollbar-width:thin]">
         <table
           className={`w-full border-separate border-spacing-y-0.5 border-spacing-x-0 text-center text-[10px] sm:text-[11px] ${
             filtrarPorEstrategia ? 'min-w-full' : 'min-w-[860px]'
@@ -344,7 +344,7 @@ export function MatrizTransicion({
         >
           <thead>
             <tr>
-              <th className="py-2 px-2.5 bg-[#0A2540] text-white font-black text-center rounded-none border-y border-l border-slate-700/80 border-r-2 border-r-slate-500 min-w-[125px] sm:min-w-[135px] w-[135px] sticky left-0 z-30 [box-shadow:-50px_0_0_#0A2540,0_-3px_0_#0A2540,0_3px_0_#0A2540,4px_0_12px_rgba(0,0,0,0.5)]">
+              <th className="py-2 px-2.5 bg-[#0A2540] text-white font-black text-center rounded-none border-y border-l border-slate-700/80 border-r-2 border-r-slate-500 min-w-[125px] sm:min-w-[135px] w-[135px] sticky left-0 z-20 [box-shadow:-50px_0_0_#0A2540,0_-3px_0_#0A2540,0_3px_0_#0A2540,4px_0_12px_rgba(0,0,0,0.5)]">
                 <div className="text-[9px] text-amber-300 font-bold uppercase tracking-wider">MORA ENTIDAD ▼</div>
                 <div>CLIENTES</div>
               </th>
@@ -370,7 +370,7 @@ export function MatrizTransicion({
               return (
                 <tr key={fila.id}>
                   {/* Encabezado Fila Dinámico Fijo a la Izquierda al Desplazar */}
-                  <td className="py-1.5 px-2.5 bg-[#0A2540] text-slate-100 font-bold text-left rounded-none border-y border-l border-slate-700 border-r-2 border-r-slate-500 min-w-[125px] sm:min-w-[135px] w-[135px] sticky left-0 z-20 [box-shadow:-50px_0_0_#0A2540,0_-3px_0_#0A2540,0_3px_0_#0A2540,4px_0_12px_rgba(0,0,0,0.5)]">
+                  <td className="py-1.5 px-2.5 bg-[#0A2540] text-slate-100 font-bold text-left rounded-none border-y border-l border-slate-700 border-r-2 border-r-slate-500 min-w-[125px] sm:min-w-[135px] w-[135px] sticky left-0 z-10 [box-shadow:-50px_0_0_#0A2540,0_-3px_0_#0A2540,0_3px_0_#0A2540,4px_0_12px_rgba(0,0,0,0.5)]">
                     <span className="truncate block font-mono text-[11px]">{fila.descripcion}</span>
                   </td>
 
@@ -475,7 +475,7 @@ export function MatrizTransicion({
                   })}
 
                   {/* Total Fila */}
-                  <td className="py-1.5 px-2 bg-slate-100 text-slate-900 font-mono font-black rounded-xs border border-slate-300 text-right">
+                  <td className="py-1.5 px-2 bg-slate-100 text-slate-900 font-mono font-black rounded-xs border border-slate-300 text-center">
                     {formatearNumero(valorTotalFila, modo)}
                   </td>
                 </tr>
@@ -484,7 +484,7 @@ export function MatrizTransicion({
 
             {/* Total Columna */}
             <tr className="border-t-2 border-slate-400">
-              <td className="py-2 px-2.5 bg-[#0A2540] text-amber-300 font-mono font-black text-left rounded-none border-y border-l border-slate-700 border-r-2 border-r-slate-500 min-w-[125px] sm:min-w-[135px] w-[135px] sticky left-0 z-20 [box-shadow:-50px_0_0_#0A2540,0_-3px_0_#0A2540,0_3px_0_#0A2540,4px_0_12px_rgba(0,0,0,0.5)]">
+              <td className="py-2 px-2.5 bg-[#0A2540] text-amber-300 font-mono font-black text-left rounded-none border-y border-l border-slate-700 border-r-2 border-r-slate-500 min-w-[125px] sm:min-w-[135px] w-[135px] sticky left-0 z-10 [box-shadow:-50px_0_0_#0A2540,0_-3px_0_#0A2540,0_3px_0_#0A2540,4px_0_12px_rgba(0,0,0,0.5)]">
                 TOTAL
               </td>
               {columnasVisibles.map((col) => {
@@ -499,7 +499,7 @@ export function MatrizTransicion({
                 );
               })}
               {/* Gran Total */}
-              <td className="py-2 px-2 bg-[#D97706] text-white font-mono font-black rounded-sm border border-amber-600 text-right text-[12px]">
+              <td className="py-2 px-2 bg-[#D97706] text-white font-mono font-black rounded-sm border border-amber-600 text-center text-[12px]">
                 {formatearNumero(granTotalCalculado, modo)}
               </td>
             </tr>

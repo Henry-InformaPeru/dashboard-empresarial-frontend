@@ -39,11 +39,25 @@ function coincideRegion(nombreBd?: string, nombreGeo?: string): boolean {
   if (!a || !b) return false;
   if (a === b) return true;
   if (a.includes('CALLAO') && b.includes('CALLAO')) return true;
-  // Comparaciones parciales seguras para distritos con sufijos (ej: "SANTIAGO DE SURCO" y "SURCO")
-  if (a.includes(b) || b.includes(a)) {
-    if (Math.min(a.length, b.length) >= 5) return true;
+  if (
+    (a === 'LIMA' || a === 'LIMA METROPOLITANA') &&
+    (b === 'LIMA' || b === 'LIMA METROPOLITANA')
+  ) {
+    return true;
   }
   return false;
+}
+
+function esTerritorioSinMapa(nombre?: string): boolean {
+  const norm = normalizarTexto(nombre);
+  return (
+    !norm ||
+    norm === 'NULL' ||
+    norm === 'NO ESPECIFICADO' ||
+    norm === 'NO DEFINIDO' ||
+    norm === 'EXTRANJERO' ||
+    norm === 'SIN UBIGEO'
+  );
 }
 
 /**
@@ -327,9 +341,8 @@ export function MapaPeru({
       return [];
     }
 
-    const depNorm = normalizarTexto(departamentoSeleccionado);
-    const featuresFiltradas = provGeoJson.features.filter(
-      (f: GeoJsonFeature) => normalizarTexto(String(f.properties?.FIRST_NOMB ?? '')) === depNorm
+    const featuresFiltradas = provGeoJson.features.filter((f: GeoJsonFeature) =>
+      coincideRegion(departamentoSeleccionado, String(f.properties?.FIRST_NOMB ?? ''))
     );
 
     return proyectarGeoJsonASvg(featuresFiltradas, 'NOMBPROV', 600, 550, 28);
@@ -362,13 +375,10 @@ export function MapaPeru({
       return [];
     }
 
-    const depNorm = normalizarTexto(departamentoSeleccionado);
-    const provNorm = normalizarTexto(provinciaSeleccionada);
-
     const featuresFiltradas = distGeoJson.features.filter(
       (f: GeoJsonFeature) =>
-        normalizarTexto(String(f.properties?.NOMBDEP ?? '')) === depNorm &&
-        normalizarTexto(String(f.properties?.NOMBPROV ?? '')) === provNorm
+        coincideRegion(departamentoSeleccionado, String(f.properties?.NOMBDEP ?? '')) &&
+        coincideRegion(provinciaSeleccionada, String(f.properties?.NOMBPROV ?? ''))
     );
 
     return proyectarGeoJsonASvg(featuresFiltradas, 'NOMBDIST', 600, 550, 28);
@@ -436,6 +446,8 @@ export function MapaPeru({
 
   // Handlers de Selección y Drilldown en el Mapa
   const handleSeleccionarDepartamento = (nombreRegion: string) => {
+    setHoverInfo(null);
+    setTableHoverInfo(null);
     if (nombreRegion === 'Todas') {
       setDepartamentoSeleccionado('Todas');
       setProvinciasData(null);
@@ -447,6 +459,10 @@ export function MapaPeru({
     }
     const item = encontrarItemDepartamento(nombreRegion);
     const target = item ? item.departamento : nombreRegion;
+    if (esTerritorioSinMapa(target)) {
+      if (item) setEstrategiasModal(item);
+      return;
+    }
     setDepartamentoSeleccionado(target);
     setProvinciaSeleccionada('');
     setDistritoSeleccionado('');
@@ -455,16 +471,26 @@ export function MapaPeru({
   };
 
   const handleSeleccionarProvincia = (nombreProv: string) => {
+    setHoverInfo(null);
+    setTableHoverInfo(null);
+    if (esTerritorioSinMapa(nombreProv)) {
+      const item = encontrarItemProvincia(nombreProv);
+      if (item) setEstrategiasModal(item);
+      return;
+    }
     setProvinciaSeleccionada(nombreProv);
     setDistritoSeleccionado('');
     setNivel('distrito'); // DRILLDOWN DIRECTO EN EL MAPA
   };
 
   const handleSeleccionarDistrito = (nombreDistrito: string) => {
+    setHoverInfo(null);
     setDistritoSeleccionado(nombreDistrito);
   };
 
   const handleVolverADepartamentos = () => {
+    setHoverInfo(null);
+    setTableHoverInfo(null);
     setProvinciasData(null);
     setProvinciaSeleccionada('');
     setDistritoSeleccionado('');
@@ -474,6 +500,8 @@ export function MapaPeru({
   };
 
   const handleVolverAProvincias = () => {
+    setHoverInfo(null);
+    setTableHoverInfo(null);
     setProvinciaSeleccionada('');
     setDistritoSeleccionado('');
     setDistritosData(null);
@@ -485,12 +513,20 @@ export function MapaPeru({
       setOrdenAsc(!ordenAsc);
     } else {
       setOrdenColumna(columna);
-      setOrdenAsc(columna === 'departamento');
+      setOrdenAsc(
+        columna === 'departamento' ||
+          columna === 'provincia' ||
+          columna === 'distrito'
+      );
     }
   };
 
-  // Handlers de Mouse para el Mapa SVG
+  // Handlers de Mouse para el Mapa SVG (solo dispositivos con hover real)
+  const puedeHacerHover = () =>
+    typeof window === 'undefined' || window.matchMedia('(hover: hover)').matches;
+
   const handleMouseEnterDepartamento = (e: React.MouseEvent<SVGElement>, reg: RegionPath) => {
+    if (!puedeHacerHover()) return;
     const item = encontrarItemDepartamento(reg.name);
     setHoverInfo({
       nombre: reg.name,
@@ -505,6 +541,7 @@ export function MapaPeru({
     nombre: string,
     item?: GeografiaItem
   ) => {
+    if (!puedeHacerHover()) return;
     setHoverInfo({
       nombre,
       item,
@@ -514,7 +551,7 @@ export function MapaPeru({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!hoverInfo) return;
+    if (!hoverInfo || !puedeHacerHover()) return;
     setHoverInfo((prev) =>
       prev
         ? {
@@ -530,8 +567,9 @@ export function MapaPeru({
     setHoverInfo(null);
   };
 
-  // Manejo de hover en filas de la tabla para el cuadrito de estrategias (HOVER)
+  // Manejo de hover en filas de la tabla para el cuadrito de estrategias (solo en dispositivos con hover)
   const handleTableRowMouseEnter = (e: React.MouseEvent, it: GeografiaItem) => {
+    if (!puedeHacerHover()) return;
     setTableHoverInfo({
       item: it,
       x: e.clientX,
@@ -556,17 +594,17 @@ export function MapaPeru({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-2xs border border-slate-200/90 overflow-hidden space-y-4">
+    <div className="w-full min-w-0 bg-white rounded-xl shadow-2xs border border-slate-200/90 overflow-hidden space-y-4">
       {/* =========================================================================
           1. ENCABEZADO INSTITUCIONAL OFICIAL POWER BI (#005B94 CON SUBTÍTULO DORADO)
           ========================================================================= */}
       {!hideToolbar && (
-        <div className="bg-[#005B94] text-white px-4 sm:px-6 py-2.5 border-b border-blue-900/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="min-w-0 shrink">
-            <h3 className="font-extrabold text-sm sm:text-base tracking-tight text-white uppercase truncate">
+        <div className="bg-[#005B94] text-white px-3 sm:px-6 py-2.5 border-b border-blue-900/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-extrabold text-xs sm:text-base tracking-tight text-white uppercase leading-snug">
               DISTRIBUCIÓN GEOGRÁFICA Y CONCENTRACIÓN TERRITORIAL
             </h3>
-            <p className="text-xs font-bold text-[#FFD700] tracking-wide mt-0.5 truncate">
+            <p className="text-[11px] sm:text-xs font-bold text-[#FFD700] tracking-wide mt-0.5 leading-snug">
               Cartografía interactiva: Departamentos ➔ Provincias ➔ Distritos (Estilo Infogob)
             </p>
           </div>
@@ -608,7 +646,7 @@ export function MapaPeru({
         </div>
       )}
 
-      <div className="p-4 sm:p-5 space-y-4">
+      <div className="p-3 sm:p-5 space-y-4 min-w-0">
         {/* =========================================================================
             2. CARDS EJECUTIVOS DE CONCENTRACIÓN REGIONAL (EXACTAMENTE TOP 1, TOP 2, TOP 3)
             Bordes laterales acentuados (border-l-4), números tabulares y clic interactivo
@@ -743,7 +781,7 @@ export function MapaPeru({
           {/* MAPA SVG VECTORIAL DEL PERÚ (5 cols - POLÍGONOS REALES ESTILO INFOGOB) */}
           <div
             ref={containerRef}
-            className="lg:col-span-5 relative flex flex-col justify-between p-4 bg-gradient-to-b from-slate-50 via-white to-blue-50/20 rounded-2xl border border-slate-200 min-h-[640px] xl:min-h-[700px] shadow-xs"
+            className="lg:col-span-5 min-w-0 relative flex flex-col justify-between p-3 sm:p-4 bg-gradient-to-b from-slate-50 via-white to-blue-50/20 rounded-2xl border border-slate-200 min-h-[460px] lg:min-h-[640px] xl:min-h-[700px] shadow-xs"
           >
             {/* Cabecera del Mapa con Controles de Drill-Up */}
             <div className="w-full flex items-center justify-between mb-2 pb-2 border-b border-slate-100 text-xs">
@@ -805,7 +843,7 @@ export function MapaPeru({
               {nivel === 'departamento' && (
                 <svg
                   viewBox={`0 0 ${PERU_VIEWBOX.width} ${PERU_VIEWBOX.height}`}
-                  className="w-full h-[490px] sm:h-[550px] xl:h-[600px] select-none filter drop-shadow-md transition-all duration-300"
+                  className="w-full h-[380px] sm:h-[550px] xl:h-[600px] select-none filter drop-shadow-md transition-all duration-300"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <g stroke="#FFFFFF" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round">
@@ -871,7 +909,7 @@ export function MapaPeru({
               {nivel === 'provincia' && (
                 <svg
                   viewBox="0 0 600 550"
-                  className="w-full h-[490px] sm:h-[550px] xl:h-[600px] select-none filter drop-shadow-md transition-all duration-300"
+                  className="w-full h-[380px] sm:h-[550px] xl:h-[600px] select-none filter drop-shadow-md transition-all duration-300"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   {/* Polígonos de Provincias */}
@@ -959,7 +997,7 @@ export function MapaPeru({
               {nivel === 'distrito' && (
                 <svg
                   viewBox="0 0 600 550"
-                  className="w-full h-[490px] sm:h-[550px] xl:h-[600px] select-none filter drop-shadow-md transition-all duration-300"
+                  className="w-full h-[380px] sm:h-[550px] xl:h-[600px] select-none filter drop-shadow-md transition-all duration-300"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   {/* Polígonos de Distritos */}
@@ -1071,10 +1109,10 @@ export function MapaPeru({
           {/* =========================================================================
               TABLA DE DATOS TERRITORIALES (LISTADO COMPLETO DONDE HAY INFORMACIÓN + PIN 📍 + HOVER)
               ========================================================================= */}
-          <div className="lg:col-span-7 relative flex flex-col justify-between p-4 bg-white rounded-2xl border border-slate-200 shadow-xs min-h-[640px] xl:min-h-[700px]">
+          <div className="lg:col-span-7 min-w-0 relative flex flex-col justify-between p-3 sm:p-4 bg-white rounded-2xl border border-slate-200 shadow-xs lg:min-h-[640px] xl:min-h-[700px]">
             {/* Cabecera de la Tabla */}
-            <div className="w-full flex items-center justify-between mb-2 pb-2 border-b border-slate-100 text-xs">
-              <div className="flex items-center gap-2">
+            <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-100 text-xs">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#005B94] animate-pulse" />
                 <span className="font-extrabold text-slate-900 tracking-tight">
                   {nivel === 'distrito'
@@ -1109,7 +1147,7 @@ export function MapaPeru({
             </div>
 
             {/* Contenedor con Scroll de la Tabla Institucional Completa (Sin recortar con paginación) */}
-            <div className="overflow-x-auto overflow-y-auto max-h-[540px] xl:max-h-[600px] touch-pan-x rounded-xl border border-slate-200 grow shadow-2xs [scrollbar-width:thin]">
+            <div className="overflow-x-auto overflow-y-auto max-h-[540px] xl:max-h-[600px] touch-pan-x touch-pan-y rounded-xl border border-slate-200 grow shadow-2xs [scrollbar-width:thin]">
               <table className="w-full min-w-[500px] text-xs border-collapse">
                 <thead className="sticky top-0 z-10 bg-[#005B94] shadow-xs">
                   <tr className="text-white font-extrabold text-[10px] uppercase tracking-wider select-none">

@@ -100,16 +100,16 @@ export function Header({ onMenu }: { onMenu?: () => void }) {
   const logoMostrar = entidadLogo ?? usuario?.empresaLogo ?? null;
 
   return (
-    <header className="sticky top-0 z-30 h-14 bg-white border-b border-slate-200/90 px-3 sm:px-5 flex items-center justify-between gap-3 shadow-2xs">
+    <header className="sticky top-0 z-40 h-14 bg-white border-b border-slate-200/90 px-3 sm:px-5 flex items-center justify-between gap-3 shadow-2xs">
       {/* Título: PORTFOLIO CONTROLLER + Entidad Supervisada */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         {onMenu && (
           <button
             type="button"
             onClick={onMenu}
             aria-label="Mostrar u ocultar el menú"
             title="Mostrar u ocultar el menú lateral"
-            className="w-10 h-10 -ml-1 flex items-center justify-center rounded-lg text-[#1B4589] hover:bg-blue-50 active:bg-blue-100 shrink-0 cursor-pointer transition-colors"
+            className="w-9 h-9 sm:w-10 sm:h-10 -ml-1 flex items-center justify-center rounded-lg text-[#1B4589] hover:bg-blue-50 active:bg-blue-100 shrink-0 cursor-pointer transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
@@ -117,27 +117,27 @@ export function Header({ onMenu }: { onMenu?: () => void }) {
           </button>
         )}
 
-        <h1 className="text-base sm:text-lg font-black tracking-tight flex items-center gap-1.5 shrink-0">
+        <h1 className="text-xs sm:text-base md:text-lg font-black tracking-tight flex items-center gap-1 sm:gap-1.5 shrink-0">
           <span className="text-[#1B4589]">PORTFOLIO</span>
           <span className="text-[#F58220]">CONTROLLER</span>
         </h1>
 
-        <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+        <div className="h-4 w-px bg-slate-200 hidden sm:block shrink-0" />
 
         {/* Badge Entidad Financiera o Modo Administrador */}
         {isAdmin ? (
-          <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-lg text-xs font-bold text-white shadow-2xs">
+          <div className="hidden md:flex items-center gap-2 px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-lg text-xs font-bold text-white shadow-2xs shrink-0">
             <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse shrink-0" />
             <span>Panel Administrador Sulotec</span>
           </div>
         ) : (
           logoMostrar ? (
-            <div className="flex items-center px-3 py-1 bg-white border border-slate-200/90 rounded-xl shadow-2xs">
+            <div className="flex items-center justify-center h-8 sm:h-9 max-h-8 sm:max-h-9 px-1.5 sm:px-2.5 py-0.5 sm:py-1 bg-white border border-slate-200/90 rounded-lg shadow-2xs overflow-hidden min-w-0 shrink">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={logoMostrar}
                 alt={usuario?.empresaNombre || entidad || 'Empresa Cliente'}
-                className="h-8 sm:h-9 w-auto max-w-[180px] sm:max-w-[220px] object-contain shrink-0"
+                className="h-5 sm:h-[26px] w-auto max-w-[85px] sm:max-w-[170px] object-contain"
               />
             </div>
           ) : (
