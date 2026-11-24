@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Footer } from './Footer';
+import { FranjaLicencia } from '../licencia/FranjaLicencia';
 
 export function AppShell({
   children,
@@ -64,6 +65,7 @@ export function AppShell({
 
       <div className="flex-1 flex flex-col min-w-0">
         <Header onMenu={alternarMenu} />
+        <FranjaLicencia />
         <main className="flex-1 flex flex-col p-2 sm:p-3 lg:p-3.5 xl:p-4 pb-2 overflow-y-auto max-w-full overflow-x-hidden">
           {children}
         </main>
